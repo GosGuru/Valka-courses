@@ -211,15 +211,24 @@ export const uploadAvatar = async (file) => {
      throw error;
   }
 
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-  const filePath = `${fileName}`;
+  const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const filePath = `${user.id}/avatar.${fileExt}`; // ruta estable por usuario
 
+  // Validaciones básicas
+  if (!['png','jpg','jpeg'].includes(fileExt)) {
+    throw new Error('Formato no soportado. Usa PNG o JPG.');
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('La imagen excede 5MB.');
+  }
+
+  // Subir con upsert
   const { error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
     .upload(filePath, file, {
-      cacheControl: '3600',
+      cacheControl: '0',
       upsert: true,
+      contentType: file.type
     });
 
   if (uploadError) {
@@ -227,11 +236,13 @@ export const uploadAvatar = async (file) => {
     throw uploadError;
   }
 
-  const { data: { publicUrl } } = supabase.storage
+  const { data: pub } = supabase.storage
     .from(BUCKET_NAME)
     .getPublicUrl(filePath);
 
-  return publicUrl;
+  // Cache bust param para que el navegador recargue
+  const finalUrl = pub.publicUrl + `?v=${Date.now()}`;
+  return finalUrl;
 };
 
 export const getUserBadges = async (userId = null) => {

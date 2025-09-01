@@ -65,10 +65,13 @@ const EditProfile = () => {
         photo_url,
       });
 
+      // Refrescar estado local para ver nueva imagen sin necesidad de navegar aún
+      setProfile(prev => ({ ...prev, display_name: formData.display_name, photo_url }));
+      setPreviewUrl(photo_url);
       toast({ title: '¡Éxito!', description: 'Tu perfil ha sido actualizado.' });
-      navigate('/profile');
+      setTimeout(() => navigate('/profile'), 400);
     } catch (error) {
-      toast({ title: 'Error', description: 'No se pudo actualizar el perfil.', variant: 'destructive' });
+      toast({ title: 'Error', description: error.message || 'No se pudo actualizar el perfil.', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
