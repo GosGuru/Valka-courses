@@ -10,7 +10,7 @@ const cardVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
-const TodaySession = ({ activeSession, allSessions, onSessionSelect, onCompleteSession }) => {
+const TodaySession = ({ activeSession, allSessions, completedSessionIds = [], onSessionSelect, onCompleteSession }) => {
   const renderContent = () => {
     if (!activeSession) {
       return (
@@ -174,13 +174,18 @@ const TodaySession = ({ activeSession, allSessions, onSessionSelect, onCompleteS
             <SelectTrigger className="w-full sm:w-[220px]">
               <SelectValue placeholder="Elige una sesión" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[60vh] overflow-y-auto">
               {allSessions && allSessions.map(week => (
                 <SelectGroup key={week.id}>
                   <SelectLabel>{week.label}</SelectLabel>
                   {week.sessions && week.sessions.map(session => (
-                    <SelectItem key={session.id} value={session.id}>
-                      {session.title}
+                    <SelectItem key={session.id} value={session.id} className="flex items-center gap-2">
+                      <span className="flex-1 flex items-center gap-2">
+                        {completedSessionIds.includes(session.id) && (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        )}
+                        {session.title}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectGroup>

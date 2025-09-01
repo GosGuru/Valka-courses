@@ -1,91 +1,137 @@
 import { supabase } from '@/lib/customSupabaseClient';
 
+// Siempre creamos una nueva inscripción para preservar historial.
 export const enrollInProgram = async (programId, trainingDays) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Debes iniciar sesión para inscribirte.');
 
-  const { data: existing } = await supabase.from('enrollments')
-    .select('*')
+  // Cerrar inscripción activa previa marcándola como cancelada (no borrar progreso)
+  const { data: activeEnrollment } = await supabase
+    .from('enrollments')
+    .select('id')
     .eq('user_id', user.id)
-    .eq('program_id', programId)
+    .eq('status', 'active')
     .maybeSingle();
-
-  if (existing) {
-    if (existing.status === 'active') {
-      throw new Error('Ya estás inscrito en este programa.');
-    } else {
-      const { data: updatedData, error: updateError } = await supabase.from('enrollments')
-        .update({ 
-          status: 'active', 
-          started_at: new Date().toISOString(), 
-          start_date: new Date().toISOString().split('T')[0],
-          completed_at: null,
-          training_days: trainingDays
-        })
-        .eq('id', existing.id)
-        .select()
-        .single();
-      if (updateError) throw updateError;
-      return updatedData;
+  if (activeEnrollment) {
+    // Intentar usar cancelled_at si existe
+    const baseUpdate = { status: 'cancelled', cancelled_at: new Date().toISOString() };
+    const { error: cancelErr } = await supabase
+      .from('enrollments')
+      .update(baseUpdate)
+      .eq('id', activeEnrollment.id);
+    if (cancelErr && cancelErr.message?.includes('cancelled_at')) {
+      await supabase.from('enrollments').update({ status: 'cancelled' }).eq('id', activeEnrollment.id);
     }
   }
 
+  // Obtener versión del programa
   const { data: program, error: programError } = await supabase
     .from('programs')
     .select('version')
     .eq('id', programId)
     .single();
-
   if (programError || !program) throw new Error('Programa no encontrado');
+  // Calcular attempt: buscar máximo attempt existente para este user+program
+  let nextAttempt = 1;
+  const { data: lastAttempts, error: attemptsErr } = await supabase
+    .from('enrollments')
+    .select('attempt')
+    .eq('user_id', user.id)
+    .eq('program_id', programId)
+    .order('attempt', { ascending: false })
+    .limit(1);
+  if (!attemptsErr && lastAttempts && lastAttempts.length > 0 && lastAttempts[0].attempt) {
+    nextAttempt = (lastAttempts[0].attempt || 0) + 1;
+  }
 
-  const { data, error } = await supabase.from('enrollments').insert([
-    {
-      user_id: user.id,
-      program_id: programId,
-      version_locked: program.version,
-      status: 'active',
-      started_at: new Date().toISOString(),
-      start_date: new Date().toISOString().split('T')[0],
-      training_days: trainingDays,
-    },
-  ]).select().single();
+  const newEnrollmentPayload = {
+    user_id: user.id,
+    program_id: programId,
+    version_locked: program.version,
+    status: 'active',
+    started_at: new Date().toISOString(),
+    training_days: trainingDays,
+    attempt: nextAttempt
+  };
 
-  if (error) throw error;
-  return data;
+  // Intentar crear NUEVA fila para preservar historial
+  let { data: inserted, error: insertError } = await supabase
+    .from('enrollments')
+    .insert([newEnrollmentPayload])
+    .select()
+    .maybeSingle();
+
+  if (insertError) {
+    // Fallback: constraint antigua (user_id, program_id) impide nuevas filas. Reutilizamos
+    if (insertError.code === '23505') {
+      const { data: existing } = await supabase
+        .from('enrollments')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('program_id', programId)
+        .maybeSingle();
+      if (!existing) throw insertError;
+
+      const reuseUpdate = {
+        status: 'active',
+        started_at: new Date().toISOString(),
+        completed_at: null,
+        training_days: trainingDays,
+        version_locked: program.version
+      };
+      if (existing.hasOwnProperty('attempt')) {
+        reuseUpdate.attempt = (existing.attempt || 0) + 1;
+      }
+      const { data: updated, error: reuseErr } = await supabase
+        .from('enrollments')
+        .update(reuseUpdate)
+        .eq('id', existing.id)
+        .select()
+        .single();
+      if (reuseErr) throw reuseErr;
+      return updated;
+    }
+    throw insertError;
+  }
+  return inserted;
 };
 
 export const unenrollFromProgram = async (enrollmentId, feedback = null) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Debes iniciar sesión.');
 
-  // Desinscribir cambiando el estado a 'cancelled'
-  const { data, error } = await supabase
+  // Marcar como cancelada (mantener progresos históricos)
+  let { data, error } = await supabase
     .from('enrollments')
-    .update({
-      status: 'cancelled'
-    })
+    .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
     .eq('id', enrollmentId)
     .eq('user_id', user.id)
     .select()
     .single();
-
+  if (error && error.message?.includes('cancelled_at')) {
+    ({ data, error } = await supabase
+      .from('enrollments')
+      .update({ status: 'cancelled' })
+      .eq('id', enrollmentId)
+      .eq('user_id', user.id)
+      .select()
+      .single());
+  }
   if (error) throw error;
 
-  // Si existe una tabla para feedback podríamos guardarlo aquí.
-  // Este bloque es seguro (ignora si no existe la tabla).
   if (feedback && Object.keys(feedback).length > 0) {
     try {
-      await supabase.from('unenroll_feedback').insert([{
-        enrollment_id: enrollmentId,
-        user_id: user.id,
-        payload: feedback,
-        created_at: new Date().toISOString()
-      }]);
+      await supabase.from('unenroll_feedback').insert([
+        {
+          enrollment_id: enrollmentId,
+          user_id: user.id,
+          payload: feedback,
+          created_at: new Date().toISOString()
+        }
+      ]);
     } catch (e) {
-      // Silencioso: si no existe la tabla, no interrumpimos el flujo
       console.warn('Feedback de desinscripción no guardado (tabla opcional):', e?.message);
     }
   }
-
   return data;
 };

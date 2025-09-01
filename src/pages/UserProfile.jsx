@@ -1,5 +1,5 @@
 
-    import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -10,15 +10,18 @@ import {
   MessageSquare,
   UserPlus,
   UserCheck,
-  UserX
+  UserX,
+  Award,
+  Calendar,
+  CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { getPublicUserProfile, addFriend, respondToFriendRequest } from '@/lib/api';
+import { getPublicUserProfile, addFriend, respondToFriendRequest, getUserAchievements, getUserAchievementStats } from '@/lib/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, isValid } from 'date-fns';
+import { format, isValid, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const UserProfile = () => {
@@ -29,12 +32,20 @@ const UserProfile = () => {
 
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [achievements, setAchievements] = useState([]);
+  const [achievementStats, setAchievementStats] = useState({ totalPrograms: 0, totalSessions: 0 });
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getPublicUserProfile(userId);
+      const [data, userAchievements, stats] = await Promise.all([
+        getPublicUserProfile(userId),
+        getUserAchievements(userId),
+        getUserAchievementStats(userId)
+      ]);
       setProfileData(data);
+      setAchievements(userAchievements);
+      setAchievementStats(stats);
     } catch (error) {
       toast({ title: 'Error', description: 'No se pudo cargar el perfil del usuario.', variant: 'destructive' });
       navigate('/dashboard');
@@ -135,8 +146,9 @@ const UserProfile = () => {
 
       <motion.div variants={cardVariants} className="mt-6">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Programa Actual</TabsTrigger>
+            <TabsTrigger value="achievements">Logros</TabsTrigger>
             <TabsTrigger value="progress">Historial</TabsTrigger>
             <TabsTrigger value="prs">PRs</TabsTrigger>
           </TabsList>
@@ -155,6 +167,85 @@ const UserProfile = () => {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8">Este usuario no está inscrito en ningún programa actualmente.</p>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="achievements" className="mt-4">
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Award className="w-5 h-5 text-primary" />
+                  Logros Completados
+                </h3>
+                <div className="text-right text-sm text-muted-foreground">
+                  <p>{achievementStats.totalPrograms} programas completados</p>
+                  <p>{achievementStats.totalSessions} sesiones totales</p>
+                </div>
+              </div>
+              
+              {achievements.length > 0 ? (
+                <div className="space-y-4">
+                  {achievements.map((achievement) => {
+                    const duration = achievement.started_at && achievement.completed_at
+                      ? differenceInDays(new Date(achievement.completed_at), new Date(achievement.started_at))
+                      : 0;
+
+                    return (
+                      <motion.div
+                        key={achievement.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 bg-gradient-to-r from-green-500/10 to-primary/10 border border-green-500/20 rounded-lg"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                              <Trophy className="w-6 h-6 text-green-400" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-green-400 flex items-center gap-2">
+                                <CheckCircle className="w-4 h-4" />
+                                {achievement.program.name}
+                              </h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {achievement.program.description || 'Programa de entrenamiento completado'}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {achievement.completed_at && isValid(new Date(achievement.completed_at))
+                                    ? `Completado el ${format(new Date(achievement.completed_at), 'dd MMM, yyyy', { locale: es })}`
+                                    : 'Fecha no disponible'
+                                  }
+                                </span>
+                                {duration > 0 && (
+                                  <span>• Duración: {duration} días</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-primary">
+                              {achievement.completed_sessions} sesiones
+                            </p>
+                            <p className="text-xs text-muted-foreground">completadas</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Trophy className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    Este usuario aún no ha completado ningún programa.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Los logros aparecerán aquí cuando complete sus primeros programas.
+                  </p>
+                </div>
               )}
             </div>
           </TabsContent>

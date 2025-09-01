@@ -2,20 +2,23 @@
 import { getPrograms, getProgramById, getAllSessionsForProgram, getSessionById } from './api/programs';
 import { getLessonCategoriesWithLessons } from './api/library';
 import { enrollInProgram, unenrollFromProgram } from './api/auth';
-import { 
-  getActiveEnrollment, 
-  getTodaySession, 
-  completeSession, 
-  getUserProfile, 
-  updateUserProfile, 
-  uploadAvatar, 
-  getUserBadges, 
+import {
+  getActiveEnrollment,
+  getTodaySession,
+  completeSession,
+  getUserProfile,
+  updateUserProfile,
+  uploadAvatar,
+  getUserBadges,
   getUserPRs,
   getPublicUserProfile,
   searchUsers,
   getFriends,
   addFriend,
-  respondToFriendRequest
+  respondToFriendRequest,
+  getUserAchievements,
+  getUserAchievementStats,
+  getProgramEnrolledStudents
 } from './api/user';
 import { 
   getEnrolledStudents,
@@ -58,6 +61,9 @@ export {
   addFriend,
   respondToFriendRequest,
   getEnrolledStudents,
+  getUserAchievements,
+  getUserAchievementStats,
+  getProgramEnrolledStudents,
   adminGetAllPrograms,
   adminCreateProgram,
   adminUpdateProgram,

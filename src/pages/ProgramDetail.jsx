@@ -193,7 +193,7 @@ const ProgramDetail = ({ onEnrollClick }) => {
   }
 
   const isEnrolledInThis = activeEnrollment?.program_id === program.id;
-  const canEnroll = !activeEnrollment || isEnrolledInThis;
+  const canEnroll = true; // Ahora siempre se puede inscribir, la lógica del backend manejará el cambio de programa
   const averageRating = program.reviews?.length > 0
     ? (program.reviews.reduce((acc, r) => acc + r.rating, 0) / program.reviews.length).toFixed(1)
     : 'N/A';
@@ -326,19 +326,10 @@ const ProgramDetail = ({ onEnrollClick }) => {
                 <Button 
                   onClick={handleOpenEnrollModal}
                   className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                  disabled={!canEnroll && !isEnrolledInThis}
+                  disabled={false}
                 >
-                  {canEnroll ? (
-                    <>
-                      <Target className="w-4 h-4 mr-2" />
-                      Inscribirse Ahora
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4 mr-2" />
-                      Programa Activo
-                    </>
-                  )}
+                  <Target className="w-4 h-4 mr-2" />
+                  {activeEnrollment && !isEnrolledInThis ? 'Cambiar a Este Programa' : 'Inscribirse Ahora'}
                 </Button>
               )}
             </div>

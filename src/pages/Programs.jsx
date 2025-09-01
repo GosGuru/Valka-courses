@@ -231,7 +231,7 @@ const Programs = () => {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {programs.map((program) => {
             const isEnrolledInThis = activeEnrollment?.program_id === program.id;
-            const canEnroll = !activeEnrollment || isEnrolledInThis;
+            const canEnroll = true; // Ahora siempre se puede inscribir, la lógica del backend manejará el cambio de programa
 
             return (
               <motion.div
@@ -292,14 +292,10 @@ const Programs = () => {
                       <Button 
                         onClick={() => handleOpenEnrollModal(program)}
                         className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                        disabled={!canEnroll && !isEnrolledInThis}
+                        disabled={false}
                       >
-                        {canEnroll ? (
-                          <Target className="w-4 h-4 mr-2" />
-                        ) : (
-                          <Lock className="w-4 h-4 mr-2" />
-                        )}
-                        {canEnroll ? 'Inscribirse' : 'Programa Activo'}
+                        <Target className="w-4 h-4 mr-2" />
+                        {activeEnrollment && !isEnrolledInThis ? 'Cambiar Programa' : 'Inscribirse'}
                       </Button>
                     )}
                   </div>
@@ -329,9 +325,26 @@ const Programs = () => {
         <Dialog open={isEnrollModalOpen} onOpenChange={setIsEnrollModalOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Configura tu Semana</DialogTitle>
+              <DialogTitle>
+                {activeEnrollment && activeEnrollment.program_id !== selectedProgram.id 
+                  ? 'Cambiar Programa' 
+                  : 'Configura tu Semana'
+                }
+              </DialogTitle>
               <DialogDescription>
-                Elige los días que quieres entrenar. Este programa recomienda {selectedProgram.sessions_per_week} sesiones por semana.
+                {activeEnrollment && activeEnrollment.program_id !== selectedProgram.id ? (
+                  <>
+                    <div className="p-3 mb-3 border rounded-lg bg-amber-50 border-amber-200">
+                      <p className="text-sm text-amber-800">
+                        <strong>⚠️ Cambio de programa:</strong> Te vas a inscribir en "{selectedProgram.name}". 
+                        Tu progreso actual se guardará como un logro en tu perfil y comenzarás este programa desde cero.
+                      </p>
+                    </div>
+                    Elige los días que quieres entrenar. Este programa recomienda {selectedProgram.sessions_per_week} sesiones por semana.
+                  </>
+                ) : (
+                  `Elige los días que quieres entrenar. Este programa recomienda ${selectedProgram.sessions_per_week} sesiones por semana.`
+                )}
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
@@ -375,6 +388,13 @@ const Programs = () => {
           </DialogHeader>
 
           <div className="space-y-4">
+            <div className="p-3 text-sm rounded-md bg-amber-500/10 border border-amber-600/40">
+              <p className="font-medium text-amber-400">⚠️ Importante</p>
+              <p className="mt-1 text-amber-200/80">
+                Al salir del programa <strong>se reiniciará tu progreso interno</strong> (barra y próxima sesión) si vuelves a inscribirte. 
+                Las <strong>sesiones ya completadas</strong> permanecerán guardadas en tu historial y seguirán contando para tus logros.
+              </p>
+            </div>
             <div className="space-y-1">
               <label className="text-sm font-medium">¿Por qué quieres salir?</label>
               <Select value={unenrollFeedback.reason} onValueChange={(v) => setUnenrollFeedback(prev => ({ ...prev, reason: v }))}>

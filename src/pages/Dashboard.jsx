@@ -5,7 +5,8 @@ import { Link } from 'react-router-dom';
 import { Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { getActiveEnrollment, getTodaySession, getUserBadges, getUserPRs, getUserProfile, getAllSessionsForProgram, getSessionById, getEnrolledStudents } from '@/lib/api';
+import { getActiveEnrollment, getTodaySession, getUserBadges, getUserPRs, getUserProfile, getAllSessionsForProgram, getSessionById, getEnrolledStudents, getProgramEnrolledStudents } from '@/lib/api';
+import { supabase } from '@/lib/customSupabaseClient';
 import SessionCompleteModal from '@/components/SessionCompleteModal';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -24,6 +25,7 @@ const Dashboard = () => {
   const [enrollment, setEnrollment] = useState(null);
   const [activeSession, setActiveSession] = useState(null);
   const [allProgramSessions, setAllProgramSessions] = useState([]);
+  const [completedSessionIds, setCompletedSessionIds] = useState([]);
   const [badges, setBadges] = useState([]);
   const [prs, setPRs] = useState([]);
   const [students, setStudents] = useState([]);
@@ -50,6 +52,11 @@ const Dashboard = () => {
       if (userProfile?.role === 'admin') {
         const enrolledStudents = await getEnrolledStudents();
         setStudents(enrolledStudents);
+      } else if (activeEnrollment) {
+        const sameProgramStudents = await getProgramEnrolledStudents(activeEnrollment.program_id);
+        setStudents(sameProgramStudents);
+      } else {
+        setStudents([]);
       }
 
       if (activeEnrollment) {
@@ -60,20 +67,39 @@ const Dashboard = () => {
           getUserPRs(),
         ]);
 
+        // Obtener sesiones completadas para esta inscripción (solo del attempt actual: completed_at >= started_at)
+        const { data: completedRows } = await supabase
+          .from('session_progress')
+          .select('session_id, completed_at')
+          .eq('enrollment_id', activeEnrollment.id)
+          .eq('completed', true)
+          .gte('completed_at', activeEnrollment.started_at);
+        const completedIds = (completedRows || []).map(r => r.session_id);
+        setCompletedSessionIds(completedIds);
+
         setAllProgramSessions(allSessionsData);
         setBadges(userBadges.slice(0, 4));
         setPRs(userPRs.slice(0, 5));
 
         if (todaySessionData && !todaySessionData.error) {
           setActiveSession(todaySessionData);
-        } else if (todaySessionData?.error) {
-          console.error("Error fetching today's session:", todaySessionData.error);
-          setActiveSession({ error: "Could not load session." });
-        } else if (allSessionsData.length > 0 && allSessionsData[0].sessions.length > 0) {
-          const firstSession = await getSessionById(allSessionsData[0].sessions[0].id);
-          setActiveSession(firstSession);
         } else {
-          setActiveSession({ noSessions: true });
+          // Elegir primera sesión NO completada en orden de semanas/sesiones
+            const nextSession = allSessionsData
+              .flatMap(w => (w.sessions || []))
+              .find(s => !completedIds.includes(s.id));
+            if (nextSession) {
+              const sData = await getSessionById(nextSession.id);
+              setActiveSession(sData);
+            } else if (todaySessionData?.error) {
+              console.error("Error fetching today's session:", todaySessionData.error);
+              setActiveSession({ error: "Could not load session." });
+            } else if (allSessionsData.length > 0) {
+              // Todo completado
+              setActiveSession({ completedProgram: true });
+            } else {
+              setActiveSession({ noSessions: true });
+            }
         }
       }
     } catch (error) {
@@ -128,11 +154,11 @@ const Dashboard = () => {
 
   if (loading || authLoading) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex items-center justify-center h-full">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-t-transparent border-primary rounded-full"
+          className="w-12 h-12 border-4 rounded-full border-t-transparent border-primary"
         />
       </div>
     );
@@ -140,10 +166,10 @@ const Dashboard = () => {
   
   if (errorState) {
     return (
-      <div className="h-full flex items-center justify-center text-center p-4">
+      <div className="flex items-center justify-center h-full p-4 text-center">
         <div>
-          <h2 className="text-2xl font-bold text-destructive mb-4">¡Ups! Algo salió mal.</h2>
-          <p className="text-muted-foreground mb-6">No pudimos cargar los datos de tu dashboard.</p>
+          <h2 className="mb-4 text-2xl font-bold text-destructive">¡Ups! Algo salió mal.</h2>
+          <p className="mb-6 text-muted-foreground">No pudimos cargar los datos de tu dashboard.</p>
           <Button onClick={loadDashboardData}>
             Reintentar
           </Button>
@@ -157,18 +183,18 @@ const Dashboard = () => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="h-full flex items-center justify-center p-4"
+        className="flex items-center justify-center h-full p-4"
       >
-        <div className="text-center space-y-6">
-          <div className="w-32 h-32 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-lg shadow-primary/30">
+        <div className="space-y-6 text-center">
+          <div className="flex items-center justify-center w-32 h-32 mx-auto rounded-full shadow-lg bg-gradient-to-br from-primary to-secondary shadow-primary/30">
             <Target className="w-16 h-16 text-white" />
           </div>
-          <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">¡Comienza tu Transformación!</h2>
-          <p className="text-muted-foreground max-w-md">
+          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">¡Comienza tu Transformación!</h2>
+          <p className="max-w-md text-muted-foreground">
             Selecciona un programa de entrenamiento y comienza tu viaje hacia una versión más fuerte de ti mismo.
           </p>
           <Link to="/programs">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground transition-transform px-8 py-3 text-lg">
+            <Button size="lg" className="px-8 py-3 text-lg transition-transform bg-primary hover:bg-primary/90 text-primary-foreground">
               <Target className="w-5 h-5 mr-2" />
               Elegir un Programa
             </Button>
@@ -183,39 +209,43 @@ const Dashboard = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 p-4"
+      className="p-4 space-y-6"
     >
       <DashboardHeader profile={profile} user={user} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
           {enrollment && <CurrentBlock enrollment={enrollment} />}
           {enrollment && <TodaySession 
             activeSession={activeSession}
             allSessions={allProgramSessions}
+            completedSessionIds={completedSessionIds}
             onSessionSelect={handleSessionSelect}
             onCompleteSession={handleCompleteSession} 
           />}
           {enrollment && <ProgressHistory prs={prs} />}
           {profile?.role === 'admin' && !enrollment && (
-            <div className="bg-card border border-border rounded-xl p-6 text-center">
+            <div className="p-6 text-center border bg-card border-border rounded-xl">
               <h3 className="text-xl font-semibold">Modo Administrador</h3>
-              <p className="text-muted-foreground mt-2">No estás inscrito en ningún programa. Puedes ver la actividad de los alumnos a la derecha.</p>
+              <p className="mt-2 text-muted-foreground">No estás inscrito en ningún programa. Puedes ver la actividad de los alumnos a la derecha.</p>
             </div>
           )}
         </div>
 
         <div className="space-y-6">
-           {profile?.role === 'admin' && students && students.length > 0 && (
-             <EnrolledStudents students={students} />
-           )}
-           {profile?.role !== 'admin' && (
+          {profile?.role === 'admin' && students && students.length > 0 && (
+            <EnrolledStudents students={students} isAdmin />
+          )}
+          {profile?.role !== 'admin' && (
             <>
+              {enrollment && students && students.length > 0 && (
+                <EnrolledStudents students={students} programId={enrollment.program_id} isAdmin={false} />
+              )}
               <QuickActions />
               <ValkaAchievements badges={badges} />
               <QuickStats />
             </>
-           )}
+          )}
         </div>
       </div>
 

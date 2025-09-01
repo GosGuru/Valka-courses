@@ -26,9 +26,10 @@ export const getActiveEnrollment = async (userId = null) => {
 
   const { count, error: countError } = await supabase
     .from('session_progress')
-    .select('*', { count: 'exact', head: true })
-    .eq('enrollment_id', enrollment.id)
-    .eq('completed', true);
+  .select('*', { count: 'exact', head: true })
+  .eq('enrollment_id', enrollment.id)
+  .eq('completed', true)
+  .gte('completed_at', enrollment.started_at); // solo progreso de este intento
   
   if (countError) {
     console.error("Error fetching completed sessions count:", countError);
@@ -94,7 +95,8 @@ export const getTodaySession = async (enrollment) => {
       .from('session_progress')
       .select('session_id')
       .eq('enrollment_id', enrollment.id)
-      .eq('completed', true);
+  .eq('completed', true)
+  .gte('completed_at', enrollment.started_at);
 
     if (completedError) throw completedError;
     const completedSessionIds = completedSessions.map(s => s.session_id);
@@ -377,4 +379,119 @@ export const respondToFriendRequest = async (friendId, accept) => {
       .eq('user_id_2', user_id_2);
     if (error) throw error;
   }
+};
+
+// Nueva función para obtener logros de programas (inscripciones completadas)
+export const getUserAchievements = async (userId = null) => {
+  let userToFetch = userId;
+  if (!userToFetch) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    userToFetch = user.id;
+  }
+
+  const { data, error } = await supabase
+    .from('enrollments')
+    .select(`
+      id,
+      started_at,
+      completed_at,
+      program:programs(
+        id,
+        name,
+        description,
+        level,
+        cover_url
+      )
+    `)
+    .eq('user_id', userToFetch)
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false });
+
+  if (error) {
+    console.error("Error fetching user achievements:", error);
+    throw error;
+  }
+
+  // Para cada logro, obtener el conteo de sesiones completadas
+  const achievementsWithProgress = await Promise.all(
+    data.map(async (achievement) => {
+      const { count: completedSessions } = await supabase
+        .from('session_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('enrollment_id', achievement.id)
+        .eq('completed', true);
+
+      return {
+        ...achievement,
+        completed_sessions: completedSessions || 0
+      };
+    })
+  );
+
+  return achievementsWithProgress;
+};
+
+// Nueva función para obtener estadísticas de logros del usuario
+export const getUserAchievementStats = async (userId = null) => {
+  let userToFetch = userId;
+  if (!userToFetch) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { totalPrograms: 0, totalSessions: 0 };
+    userToFetch = user.id;
+  }
+
+  // Contar programas completados
+  const { count: totalPrograms } = await supabase
+    .from('enrollments')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userToFetch)
+    .eq('status', 'completed');
+
+  // Contar sesiones completadas totales de todas las inscripciones
+  const { count: totalSessions } = await supabase
+    .from('session_progress')
+    .select(`
+      id,
+      enrollment:enrollments!inner(user_id)
+    `, { count: 'exact', head: true })
+    .eq('completed', true)
+    .eq('enrollment.user_id', userToFetch);
+
+  return {
+    totalPrograms: totalPrograms || 0,
+    totalSessions: totalSessions || 0
+  };
+};
+
+// Obtener alumnos inscritos activamente a un programa específico (para vista de usuarios regulares)
+export const getProgramEnrolledStudents = async (programId) => {
+  if (!programId) return [];
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('enrollments')
+    .select(`
+      id,
+      user_id,
+      program_id,
+      profiles:user_id(display_name, photo_url),
+      program:program_id(name)
+    `)
+    .eq('program_id', programId)
+    .eq('status', 'active');
+  if (error) {
+    console.error('Error fetching program enrolled students:', error);
+    return [];
+  }
+  return (data || [])
+    .filter(e => e.user_id !== user.id) // excluir al propio usuario
+    .map(e => ({
+      id: e.user_id,
+      display_name: e.profiles?.display_name,
+      photo_url: e.profiles?.photo_url,
+      program_id: e.program_id,
+      program_name: e.program?.name
+    }));
 };

@@ -13,7 +13,7 @@ const cardVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
-const EnrolledStudents = ({ students, programId }) => {
+const EnrolledStudents = ({ students, programId, isAdmin = false }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -51,9 +51,11 @@ const EnrolledStudents = ({ students, programId }) => {
           <Users className="w-5 h-5 text-primary" />
           Alumnos Inscritos
         </h3>
-        <Button variant="outline" size="sm" onClick={handleViewAll}>
-          Ver Todos
-        </Button>
+        {isAdmin && (
+          <Button variant="outline" size="sm" onClick={handleViewAll}>
+            Ver Todos
+          </Button>
+        )}
       </div>
 
       {filteredStudents.length > 0 ? (
