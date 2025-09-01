@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 4%; /* Negro principal */
+  --foreground: 0 0% 98%; /* Texto principal, casi blanco */
+  
+  --card: 0 0% 8%; /* Un poco más claro que el fondo para las tarjetas */
+  --card-foreground: 0 0% 95%;
+
+  --popover: 0 0% 4%;
+  --popover-foreground: 0 0% 98%;
+
+  --primary: 45 68% 53%; /* Dorado oscuro */
+  --primary-foreground: 0 0% 98%;
+  
+  --secondary: 260 70% 35%; /* Morado oscuro brillante */
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 60%;
+
+  --accent: 0 0% 12%;
+  --accent-foreground: 0 0% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 0 0% 14%;
+  --input: 0 0% 14%;
+  --ring: 45 68% 53%; /* Dorado para anillos de foco */
+
+  --radius: 0.5rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em;
+  overflow-x: auto;
+}
+
+html {
+  overflow-x: auto;
+}
+
+/* Asegurar que no haya overflow horizontal innecesario */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Permitir scroll horizontal cuando sea necesario */
+.allow-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.font-logo {
+  font-family: 'Russo One', sans-serif;
+}
+
+.glass-card {
+  @apply border shadow-lg bg-card border-border rounded-xl shadow-black/20;
+}
+
+.gradient-text {
+  @apply text-transparent bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text;
+}
+
+.valka-gradient {
+  @apply text-white bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800;
+}
+
+.gold-text {
+  color: hsl(var(--primary));
+}
+
+.purple-text {
+  color: hsl(var(--secondary));
+}
+
+.floating-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  from { box-shadow: 0 0 15px hsla(var(--primary), 0.2); }
+  to { box-shadow: 0 0 25px hsla(var(--primary), 0.4); }
+}
+
+
+.force-center {
+  transform: translate(-50%, -50%) !important;
+  max-height: auto;
+}

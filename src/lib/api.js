@@ -1,0 +1,76 @@
+
+import { getPrograms, getProgramById, getAllSessionsForProgram, getSessionById } from './api/programs';
+import { getLessonCategoriesWithLessons } from './api/library';
+import { enrollInProgram, unenrollFromProgram } from './api/auth';
+import { 
+  getActiveEnrollment, 
+  getTodaySession, 
+  completeSession, 
+  getUserProfile, 
+  updateUserProfile, 
+  uploadAvatar, 
+  getUserBadges, 
+  getUserPRs,
+  getPublicUserProfile,
+  searchUsers,
+  getFriends,
+  addFriend,
+  respondToFriendRequest
+} from './api/user';
+import { 
+  getEnrolledStudents,
+  adminGetAllPrograms,
+  adminCreateProgram,
+  adminUpdateProgram,
+  adminDeleteProgram,
+  adminGetProgramWithWeeksAndSessions,
+  adminUpdateSession,
+  adminGetAllLessonCategories,
+  adminCreateLessonCategory,
+  adminUpdateLessonCategory,
+  adminDeleteLessonCategory,
+  adminCreateLesson,
+  adminUpdateLesson,
+  adminDeleteLesson,
+  getProgramEnrollments,
+  getSessionProgress
+} from './api/admin';
+
+export {
+  getPrograms,
+  getProgramById,
+  getAllSessionsForProgram,
+  getSessionById,
+  getLessonCategoriesWithLessons,
+  enrollInProgram,
+  unenrollFromProgram,
+  getActiveEnrollment,
+  getTodaySession,
+  completeSession,
+  getUserProfile,
+  updateUserProfile,
+  uploadAvatar,
+  getUserBadges,
+  getUserPRs,
+  getPublicUserProfile,
+  searchUsers,
+  getFriends,
+  addFriend,
+  respondToFriendRequest,
+  getEnrolledStudents,
+  adminGetAllPrograms,
+  adminCreateProgram,
+  adminUpdateProgram,
+  adminDeleteProgram,
+  adminGetProgramWithWeeksAndSessions,
+  adminUpdateSession,
+  adminGetAllLessonCategories,
+  adminCreateLessonCategory,
+  adminUpdateLessonCategory,
+  adminDeleteLessonCategory,
+  adminCreateLesson,
+  adminUpdateLesson,
+  adminDeleteLesson,
+  getProgramEnrollments,
+  getSessionProgress
+};
