@@ -187,29 +187,7 @@ export const uploadAvatar = async (file) => {
   if (!user) throw new Error('Usuario no autenticado');
 
   const BUCKET_NAME = 'avatars';
-
-  try {
-    const { data: bucket, error: bucketError } = await supabase.storage.getBucket(BUCKET_NAME);
-    if (bucketError) {
-      if (bucketError.statusCode === '404' || (bucketError.message && bucketError.message.includes("Bucket not found"))) {
-        const { error: createBucketError } = await supabase.storage.createBucket(BUCKET_NAME, {
-          public: true,
-          allowedMimeTypes: ['image/png', 'image/jpeg'],
-          fileSizeLimit: 1024 * 1024 * 5,
-        });
-        if (createBucketError) {
-          console.error('Error creating bucket:', createBucketError);
-          throw createBucketError;
-        }
-      } else {
-        console.error('Error getting bucket:', bucketError);
-        throw bucketError;
-      }
-    }
-  } catch (error) {
-     console.error('Error checking/creating bucket:', error);
-     throw error;
-  }
+  // Nota: La creación del bucket debe hacerse en el panel / con service key. Aquí solo intentamos subir.
 
   const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
   const filePath = `${user.id}/avatar.${fileExt}`; // ruta estable por usuario
@@ -233,7 +211,10 @@ export const uploadAvatar = async (file) => {
 
   if (uploadError) {
     console.error('Error uploading avatar:', uploadError);
-    throw uploadError;
+    if (uploadError.message?.includes('does not exist')) {
+      throw new Error('El bucket de avatars no existe o no es público. Crea "avatars" en el panel de Storage y márcalo como público.');
+    }
+    throw new Error(uploadError.message || 'No se pudo subir el avatar.');
   }
 
   const { data: pub } = supabase.storage

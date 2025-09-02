@@ -21,14 +21,21 @@ const ProgressHistory = ({ prs }) => {
   };
 
   return (
-    <motion.div variants={cardVariants} className="bg-card border border-border rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <TrendingUp className="w-6 h-6 text-primary" />
-          Historial de Progreso y PRs
+    <motion.div variants={cardVariants} className="bg-card border border-border rounded-xl p-4 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <h2 className="text-xl leading-snug font-bold flex items-center gap-2 break-words sm:text-2xl">
+          <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+          <span className="flex-1">Historial de Progreso y PRs</span>
         </h2>
-        <Button variant="outline" size="sm" onClick={handleViewHistory}>
-          Ver Historial Completo
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleViewHistory}
+          className="w-full sm:w-auto justify-center text-xs sm:text-sm whitespace-nowrap"
+          aria-label="Ver historial completo de progreso y PRs"
+        >
+          <span className="sm:hidden">Historial</span>
+          <span className="hidden sm:inline">Ver Historial Completo</span>
         </Button>
       </div>
 
@@ -52,10 +59,10 @@ const ProgressHistory = ({ prs }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-6">
-          <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">Aún no tienes PRs registrados</p>
-          <p className="text-sm text-muted-foreground">¡Completa sesiones para comenzar a registrar tu progreso!</p>
+        <div className="text-center py-6 px-2">
+          <Trophy className="w-10 h-10 mx-auto text-muted-foreground mb-3 sm:w-12 sm:h-12" />
+          <p className="text-sm sm:text-base text-muted-foreground">Aún no tienes PRs registrados</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">¡Completa sesiones para comenzar a registrar tu progreso!</p>
         </div>
       )}
     </motion.div>

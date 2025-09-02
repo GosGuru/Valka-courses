@@ -32,20 +32,18 @@ const CurrentBlock = ({ enrollment }) => {
   }
 
   return (
-    <motion.div variants={cardVariants} className="bg-card border border-border rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Target className="w-6 h-6 text-primary" />
-          Mi Bloque Actual
+    <motion.div variants={cardVariants} className="bg-card border border-border rounded-xl p-4 sm:p-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 leading-snug break-words">
+          <Target className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+          <span>Mi Bloque Actual</span>
         </h2>
-        <span className="text-sm text-muted-foreground">
-          Semana {currentWeek} de {program.weeks}
-        </span>
+        <span className="text-xs sm:text-sm text-muted-foreground">Semana {currentWeek} de {program.weeks}</span>
       </div>
       
       <div className="space-y-4">
         <div>
-          <h3 className="text-xl font-semibold text-primary mb-2">
+          <h3 className="text-lg sm:text-xl font-semibold text-primary mb-2 leading-snug">
             {program.name}
           </h3>
           <p className="text-muted-foreground">

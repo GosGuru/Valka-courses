@@ -45,15 +45,21 @@ const EnrolledStudents = ({ students, programId, isAdmin = false }) => {
     : students;
 
   return (
-    <motion.div variants={cardVariants} className="bg-card border border-border rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          Alumnos Inscritos
+    <motion.div variants={cardVariants} className="bg-card border border-border rounded-xl p-4 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <h3 className="text-base font-bold flex items-center gap-2 sm:text-lg leading-snug">
+          <Users className="w-5 h-5 text-primary flex-shrink-0" />
+          <span>Alumnos Inscritos</span>
         </h3>
         {isAdmin && (
-          <Button variant="outline" size="sm" onClick={handleViewAll}>
-            Ver Todos
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleViewAll}
+            className="w-full sm:w-auto justify-center text-xs sm:text-sm whitespace-nowrap"
+          >
+            <span className="sm:hidden">Ver</span>
+            <span className="hidden sm:inline">Ver Todos</span>
           </Button>
         )}
       </div>
@@ -98,8 +104,8 @@ const EnrolledStudents = ({ students, programId, isAdmin = false }) => {
         </div>
       ) : (
         <div className="text-center py-6">
-          <Users className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">Aún no hay alumnos inscritos.</p>
+          <Users className="w-10 h-10 mx-auto text-muted-foreground mb-3 sm:w-12 sm:h-12" />
+          <p className="text-sm sm:text-base text-muted-foreground">Aún no hay alumnos inscritos.</p>
         </div>
       )}
     </motion.div>
