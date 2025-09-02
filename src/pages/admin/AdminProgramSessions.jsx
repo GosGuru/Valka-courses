@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-import { adminGetProgramWithWeeksAndSessions, adminUpdateSession } from '@/lib/api/admin';
-import { ArrowLeft, GripVertical, Edit, Save, X, Plus } from 'lucide-react';
+import { adminGetProgramWithWeeksAndSessions, adminUpdateSession, adminUpdateWeek, adminCreateWeek, adminDeleteWeek, adminCreateSession, adminDeleteSession, adminDuplicateWeek, adminDuplicateSession, adminReorderWeeks, adminReorderSessions } from '@/lib/api/admin';
+import { ArrowLeft, GripVertical, Edit, Save, X, Plus, Copy, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -134,6 +134,9 @@ const AdminProgramSessions = () => {
   const [loading, setLoading] = useState(true);
   const [editingSession, setEditingSession] = useState(null);
   const [editedData, setEditedData] = useState({});
+  // Edición de semana
+  const [editingWeekId, setEditingWeekId] = useState(null);
+  const [weekLabelDraft, setWeekLabelDraft] = useState('');
   // Estado para pegar tabla y vista previa
   const [pasteText, setPasteText] = useState('');
   const [parsedPreview, setParsedPreview] = useState([]);
@@ -217,21 +220,105 @@ const AdminProgramSessions = () => {
     }
   };
   
-  const handleReorderWeeks = (newOrder) => {
-    // This is a UI-only reorder for now.
-    // To persist, we'd need to update `week_order` for each week.
-    setProgram(prev => ({...prev, weeks: newOrder}));
-    toast({ title: '🚧 Próximamente', description: "La reordenación persistente de semanas se implementará pronto." });
+  const handleReorderWeeks = async (newOrder) => {
+    const prevWeeks = program.weeks;
+    setProgram(p => ({ ...p, weeks: newOrder })); // optimista
+    try {
+      await adminReorderWeeks(program.id, newOrder.map(w => w.id));
+      toast({ title: 'Orden de semanas guardado' });
+    } catch (err) {
+      setProgram(p => ({ ...p, weeks: prevWeeks }));
+      toast({ variant: 'destructive', title: 'Error reordenando semanas', description: err.message });
+    }
   };
   
-  const handleReorderSessions = (newOrder, weekId) => {
+  const handleReorderSessions = async (newOrder, weekId) => {
+    const prevWeeks = program.weeks;
     setProgram(prev => ({
       ...prev,
       weeks: prev.weeks.map(week => 
         week.id === weekId ? { ...week, sessions: newOrder } : week
       )
     }));
-    toast({ title: '🚧 Próximamente', description: "La reordenación persistente de sesiones se implementará pronto." });
+    try {
+      await adminReorderSessions(weekId, newOrder.map(s => s.id));
+      toast({ title: 'Orden de sesiones guardado' });
+    } catch (err) {
+      setProgram(p => ({ ...p, weeks: prevWeeks }));
+      toast({ variant: 'destructive', title: 'Error reordenando sesiones', description: err.message });
+    }
+  };
+
+  // CRUD Weeks & Sessions
+  const handleAddWeek = async () => {
+    try {
+      const newWeek = await adminCreateWeek(program.id);
+      setProgram(prev => ({ ...prev, weeks: [...prev.weeks, { ...newWeek, sessions: [] }] }));
+      toast({ title: 'Semana creada' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: err.message });
+    }
+  };
+
+  const handleDeleteWeek = async (weekId) => {
+    if (!window.confirm('¿Eliminar esta semana y todas sus sesiones?')) return;
+    try {
+      await adminDeleteWeek(weekId);
+      setProgram(prev => ({ ...prev, weeks: prev.weeks.filter(w => w.id !== weekId) }));
+      toast({ title: 'Semana eliminada' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: err.message });
+    }
+  };
+
+  const handleDuplicateWeek = async (weekId) => {
+    try {
+      await adminDuplicateWeek(weekId);
+      await fetchProgramData();
+      toast({ title: 'Semana duplicada' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: err.message });
+    }
+  };
+
+  const handleAddSession = async (weekId) => {
+    try {
+      const newSession = await adminCreateSession(weekId, { title: 'Nueva Sesión' });
+      setProgram(prev => ({
+        ...prev,
+        weeks: prev.weeks.map(w => w.id === weekId ? { ...w, sessions: [...w.sessions, newSession] } : w)
+      }));
+      toast({ title: 'Sesión creada' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: err.message });
+    }
+  };
+
+  const handleDeleteSession = async (sessionId, weekId) => {
+    if (!window.confirm('¿Eliminar esta sesión?')) return;
+    try {
+      await adminDeleteSession(sessionId);
+      setProgram(prev => ({
+        ...prev,
+        weeks: prev.weeks.map(w => w.id === weekId ? { ...w, sessions: w.sessions.filter(s => s.id !== sessionId) } : w)
+      }));
+      toast({ title: 'Sesión eliminada' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: err.message });
+    }
+  };
+
+  const handleDuplicateSession = async (sessionId, weekId) => {
+    try {
+      const dup = await adminDuplicateSession(sessionId);
+      setProgram(prev => ({
+        ...prev,
+        weeks: prev.weeks.map(w => w.id === weekId ? { ...w, sessions: [...w.sessions, dup] } : w)
+      }));
+      toast({ title: 'Sesión duplicada' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: err.message });
+    }
   };
 
 
@@ -255,17 +342,81 @@ const AdminProgramSessions = () => {
         </div>
       </div>
       
+      <div className="flex justify-end">
+        <Button size="sm" onClick={handleAddWeek}><Plus className="w-4 h-4 mr-2" /> Añadir Semana</Button>
+      </div>
       <Reorder.Group axis="y" values={program.weeks} onReorder={handleReorderWeeks} className="space-y-6">
         {program.weeks.map((week) => (
           <Reorder.Item key={week.id} value={week} className="overflow-hidden border rounded-lg bg-card border-border">
-            <div className="flex items-center justify-between p-4 border-b bg-muted/50 border-border">
-              <div className="flex items-center gap-2">
-                <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab" />
-                <h2 className="text-xl font-semibold">{week.label}</h2>
+            <div className="flex flex-col gap-2 p-4 border-b bg-muted/50 border-border">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab shrink-0" />
+                  {editingWeekId === week.id ? (
+                    <div className="flex items-center gap-2 w-full">
+                      <Input
+                        autoFocus
+                        value={weekLabelDraft}
+                        onChange={(e) => setWeekLabelDraft(e.target.value)}
+                        className="h-8 text-base font-semibold"
+                      />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={async () => {
+                          try {
+                            if (!weekLabelDraft.trim()) {
+                              toast({ variant: 'destructive', title: 'Etiqueta vacía', description: 'Ingresa un nombre para la semana.' });
+                              return;
+                            }
+                            const updated = await adminUpdateWeek(week.id, { label: weekLabelDraft.trim() });
+                            setProgram(prev => ({
+                              ...prev,
+                              weeks: prev.weeks.map(w => w.id === week.id ? { ...w, label: updated.label } : w)
+                            }));
+                            toast({ title: 'Semana actualizada' });
+                            setEditingWeekId(null);
+                            setWeekLabelDraft('');
+                          } catch (err) {
+                            toast({ variant: 'destructive', title: 'Error', description: err.message || 'No se pudo actualizar la semana.' });
+                          }
+                        }}
+                      >
+                        <Save className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setEditingWeekId(null); setWeekLabelDraft(''); }}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setEditingWeekId(week.id); setWeekLabelDraft(week.label || ''); }}
+                      className="text-left text-xl font-semibold truncate hover:underline"
+                    >
+                      {week.label}
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handleAddSession(week.id)}>
+                    <Plus className="w-4 h-4 mr-2" /> Sesión
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDuplicateWeek(week.id)}>
+                    <Copy className="w-4 h-4 mr-2" /> Duplicar
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDeleteWeek(week.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <Button size="sm" variant="outline" onClick={() => toast({ title: '🚧 No implementado todavía' })}>
-                <Plus className="w-4 h-4 mr-2" /> Agregar Sesión
-              </Button>
+              {editingWeekId === week.id && (
+                <p className="text-xs text-muted-foreground">Pulsa Guardar para actualizar el nombre de la semana.</p>
+              )}
             </div>
             
             <Reorder.Group
@@ -377,9 +528,17 @@ const AdminProgramSessions = () => {
                             {session.session_order}: {session.title}
                           </p>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(session)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleDuplicateSession(session.id, week.id)}>
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteSession(session.id, week.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleEditClick(session)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
