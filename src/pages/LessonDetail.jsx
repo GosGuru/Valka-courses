@@ -2,10 +2,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import ReactPlayer from 'react-player/youtube';
+// Reemplazado ReactPlayer por VideoPlayer propio multi-plataforma
+import VideoPlayer from '@/components/VideoPlayer';
 import { getLessonById } from '@/lib/api/library';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet';
 
@@ -99,12 +100,7 @@ const LessonDetail = () => {
           <div className="overflow-hidden border rounded-lg bg-card border-border">
             {lesson.video_url ? (
               <div className="aspect-video">
-                <ReactPlayer
-                  url={lesson.video_url}
-                  width="100%"
-                  height="100%"
-                  controls
-                />
+                <VideoPlayer url={lesson.video_url} className="rounded" />
               </div>
             ) : (
               <div className="flex items-center justify-center aspect-video bg-muted/10 text-muted-foreground">
@@ -133,26 +129,27 @@ const LessonDetail = () => {
             </div>
           )}
 
-          {(lesson.correct_execution || lesson.incorrect_execution) && (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {lesson.correct_execution && (
-                <div className="p-5 border rounded-lg bg-card border-border">
-                  <h3 className="flex items-center gap-2 mb-2 text-base font-semibold text-green-400">
-                    <CheckCircle className="w-5 h-5" />
-                    Ejecución Correcta
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{lesson.correct_execution}</p>
-                </div>
-              )}
-              {lesson.incorrect_execution && (
-                <div className="p-5 border rounded-lg bg-card border-border">
-                  <h3 className="flex items-center gap-2 mb-2 text-base font-semibold text-red-400">
-                    <XCircle className="w-5 h-5" />
-                    Ejecución Incorrecta
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{lesson.incorrect_execution}</p>
-                </div>
-              )}
+          {lesson.errors && lesson.errors.length > 0 && (
+            <div className="p-5 border rounded-lg bg-card border-border">
+              <h2 className="mb-3 text-lg font-semibold flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-yellow-400" />Errores Comunes</h2>
+              <ul className="space-y-2">
+                {lesson.errors.map((err, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
+                    <XCircle className="flex-shrink-0 w-4 h-4 mt-0.5 text-red-400" />
+                    <span>{err}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {lesson.task && (
+            <div className="p-5 border rounded-lg bg-card border-border">
+              <h3 className="flex items-center gap-2 mb-2 text-base font-semibold text-green-400">
+                <CheckCircle className="w-5 h-5" />
+                Tarea / Ejecución Correcta
+              </h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{lesson.task}</p>
             </div>
           )}
 

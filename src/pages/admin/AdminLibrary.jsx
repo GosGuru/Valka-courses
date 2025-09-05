@@ -86,10 +86,20 @@ const AdminLibrary = () => {
 
   // Lesson CRUD
   const onLessonSubmit = async (formData) => {
-    const dataToSubmit = { 
-      ...formData, 
+    const dataToSubmit = {
+      title: formData.title,
+      video_url: formData.video_url || null,
       category_id: currentCategoryForLesson,
-      bullets: formData.bullets.split(',').map(s => s.trim()).filter(Boolean)
+      bullets: (formData.bullets || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean),
+      errors: (formData.errors || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean),
+      task: formData.task || null,
+      applicable_task: formData.applicable_task || null,
     };
     try {
       if (editingLesson) {
@@ -112,8 +122,12 @@ const AdminLibrary = () => {
     setEditingLesson(lesson);
     setCurrentCategoryForLesson(lesson.category_id);
     lessonForm.reset({
-      ...lesson,
-      bullets: lesson.bullets ? lesson.bullets.join(', ') : ''
+      title: lesson.title || '',
+      video_url: lesson.video_url || '',
+      bullets: lesson.bullets ? lesson.bullets.join(', ') : '',
+      errors: lesson.errors ? lesson.errors.join(', ') : '',
+      task: lesson.task || '',
+      applicable_task: lesson.applicable_task || ''
     });
     setIsLessonFormOpen(true);
   };
@@ -131,7 +145,8 @@ const AdminLibrary = () => {
   const openNewLessonForm = (categoryId) => {
     setEditingLesson(null);
     setCurrentCategoryForLesson(categoryId);
-    lessonForm.reset({ title: '', video_url: '', bullets: [], correct_execution: '', incorrect_execution: '', applicable_task: '' });
+  // bullets debe ser string para que .split(',') funcione al enviar
+  lessonForm.reset({ title: '', video_url: '', bullets: '', errors: '', task: '', applicable_task: '' });
     setIsLessonFormOpen(true);
   };
 
@@ -217,10 +232,10 @@ const AdminLibrary = () => {
           <form onSubmit={lessonForm.handleSubmit(onLessonSubmit)} className="space-y-4">
             <div><Label>Título</Label><Input {...lessonForm.register('title', { required: true })} /></div>
             <div><Label>URL del Video</Label><Input {...lessonForm.register('video_url')} /></div>
-            <div><Label>Ideas Clave (separadas por comas)</Label><Textarea {...lessonForm.register('bullets')} /></div>
-            <div><Label>Ejecución Correcta</Label><Textarea {...lessonForm.register('correct_execution')} /></div>
-            <div><Label>Ejecución Incorrecta</Label><Textarea {...lessonForm.register('incorrect_execution')} /></div>
-            <div><Label>Tarea Aplicable</Label><Textarea {...lessonForm.register('applicable_task')} /></div>
+            <div><Label>Ideas Clave (separadas por comas)</Label><Textarea {...lessonForm.register('bullets')} placeholder="Idea 1, Idea 2, Idea 3" /></div>
+            <div><Label>Errores Comunes (separados por comas)</Label><Textarea {...lessonForm.register('errors')} placeholder="Error 1, Error 2" /></div>
+            <div><Label>Tarea (Descripción)</Label><Textarea {...lessonForm.register('task')} placeholder="Describe la tarea o práctica" /></div>
+            <div><Label>Tarea Aplicable Hoy</Label><Textarea {...lessonForm.register('applicable_task')} placeholder="Acción concreta para hoy" /></div>
             <DialogFooter><DialogClose asChild><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit">Guardar</Button></DialogFooter>
           </form>
         </DialogContent>

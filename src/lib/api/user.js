@@ -261,6 +261,43 @@ export const getUserPRs = async (userId = null) => {
   return data;
 };
 
+// Crear un nuevo PR
+export const createPR = async ({ type, value, unit, date }) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+  if (!type || !value) throw new Error('Tipo y valor son requeridos');
+  const payload = {
+    user_id: user.id,
+    type: type.trim(),
+    value: Number(value),
+    unit: unit?.trim() || null,
+    date: date || new Date().toISOString().slice(0,10)
+  };
+  const { data, error } = await supabase.from('prs').insert(payload).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const updatePR = async (id, { type, value, unit, date }) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+  const updates = {};
+  if (type) updates.type = type.trim();
+  if (value != null) updates.value = Number(value);
+  if (unit !== undefined) updates.unit = unit ? unit.trim() : null;
+  if (date) updates.date = date;
+  const { data, error } = await supabase.from('prs').update(updates).eq('id', id).eq('user_id', user.id).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const deletePR = async (id) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+  const { error } = await supabase.from('prs').delete().eq('id', id).eq('user_id', user.id);
+  if (error) throw error;
+};
+
 export const getPublicUserProfile = async (profileId) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Usuario no autenticado');
@@ -371,6 +408,21 @@ export const respondToFriendRequest = async (friendId, accept) => {
       .eq('user_id_2', user_id_2);
     if (error) throw error;
   }
+};
+
+// Eliminar a un amigo existente (status aceptado)
+export const removeFriend = async (friendId) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+
+  const [user_id_1, user_id_2] = [user.id, friendId].sort();
+
+  const { error } = await supabase
+    .from('friends')
+    .delete()
+    .eq('user_id_1', user_id_1)
+    .eq('user_id_2', user_id_2);
+  if (error) throw error;
 };
 
 // Nueva función para obtener logros de programas (inscripciones completadas)

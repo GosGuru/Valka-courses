@@ -52,14 +52,16 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
         </div>
       </main>
 
+
+      {/* Fondo con imagen y overlay */}
       <div className="absolute inset-0 z-0 opacity-10">
-        <img
+        {/* <img
           className="object-cover w-full h-full"
           alt="fondo de gimnasio oscuro"
-          src="https://horizons-cdn.hostinger.com/fde49ae2-5262-4e73-9e30-4e32b2057cb9/08c910b2aa6c5761c0985b9a5055bab17bbbc0a9-5N1O9.png"
-        />
+          src="Hero.jpeg"
+        /> */}
       </div>
-      <div className="absolute inset-0 z-0 bg-background/80"></div>
+      <div className="absolute z-0 inset-2 bg-background/50"></div>
 
       {/* Sección de Filosofía VALKA */}
       
@@ -72,7 +74,7 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
       >
         <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:items-center">
           {/* Texto primero (mobile-first) */}
-          <div className="md:col-span-7">
+          <div className="md:col-span-7 ">
             <h2 className="text-2xl font-semibold tracking-wide sm:text-3xl md:text-4xl text-foreground">
               La Filosofía <span className="text-primary">VALKA</span>
             </h2>
@@ -109,12 +111,12 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
           </div>
 
           {/* Imagen: se oculta en mobile para priorizar legibilidad */}
-          <div className="hidden md:block md:col-span-5">
+          <div className="hidden shadow-sm md:block md:col-span-5 ">
             <div className="relative overflow-hidden shadow-lg rounded-xl ring-1 ring-white/10">
               <img
-                src="https://horizons-cdn.hostinger.com/fde49ae2-5262-4e73-9e30-4e32b2057cb9/08c910b2aa6c5761c0985b9a5055bab17bbbc0a9-5N1O9.png"
+                src="sobreNosotros.jpeg"
                 alt="Entrenamiento en la plaza"
-                className="h-[260px] w-full object-cover"
+                className="h-[260px]  w-full object-cover"
               />
             </div>
           </div>

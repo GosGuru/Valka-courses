@@ -198,9 +198,8 @@ export default defineConfig({
 	],
 	server: {
 		cors: true,
-		headers: {
-			'Cross-Origin-Embedder-Policy': 'credentialless',
-		},
+		// Removido COEP credentialless porque puede bloquear iframes (YouTube, Vimeo) en desarrollo.
+		headers: {},
 		allowedHosts: true,
 	},
 	resolve: {

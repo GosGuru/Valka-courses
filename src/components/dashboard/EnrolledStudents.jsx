@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, MoreHorizontal, Eye, UserPlus, MessageSquare } from 'lucide-react';
+import { Users, MoreHorizontal, Eye, UserPlus, MessageSquare, Check, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { addFriend, getFriends } from '@/lib/api';
+import { supabase } from '@/lib/customSupabaseClient';
 import { useNavigate } from 'react-router-dom';
 
 const cardVariants = {
@@ -16,6 +18,24 @@ const cardVariants = {
 const EnrolledStudents = ({ students, programId, isAdmin = false }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [friendIds, setFriendIds] = useState(new Set());
+  const [pendingIds, setPendingIds] = useState(new Set());
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  // Cargar amistades actuales y solicitudes pendientes
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setCurrentUserId(user.id);
+      try {
+        const { friends, requests } = await getFriends();
+        setFriendIds(new Set(friends.map(f => f.id)));
+        setPendingIds(new Set(requests.map(r => r.id)));
+      } catch (e) {
+        // Silencioso; no crítico
+      }
+    })();
+  }, []);
 
   const handleActionClick = (description) => {
     toast({
@@ -28,8 +48,14 @@ const EnrolledStudents = ({ students, programId, isAdmin = false }) => {
     navigate(`/profile/${studentId}`);
   };
   
-  const handleAddFriend = (studentName) => {
-    handleActionClick(`La función para agregar a ${studentName} como amigo se implementará pronto.`);
+  const handleAddFriend = async (student) => {
+    try {
+      await addFriend(student.id);
+      setPendingIds(prev => new Set([...prev, student.id]));
+      toast({ title: 'Solicitud enviada', description: `Has enviado una solicitud a ${student.display_name}.` });
+    } catch (e) {
+      toast({ title: 'No se pudo enviar', description: e.message, variant: 'destructive' });
+    }
   };
 
   const handleSendMessage = (studentName) => {
@@ -66,7 +92,11 @@ const EnrolledStudents = ({ students, programId, isAdmin = false }) => {
 
       {filteredStudents.length > 0 ? (
         <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-          {filteredStudents.map((student) => (
+          {filteredStudents.map((student) => {
+            const isMe = student.id === currentUserId;
+            const isFriend = friendIds.has(student.id);
+            const isPending = pendingIds.has(student.id);
+            return (
             <div key={student.id} className="flex items-center justify-between p-3 bg-accent rounded-lg">
               <div className="flex items-center gap-3">
                 <Avatar>
@@ -89,10 +119,22 @@ const EnrolledStudents = ({ students, programId, isAdmin = false }) => {
                     <Eye className="mr-2 h-4 w-4" />
                     <span>Visitar Perfil</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddFriend(student.display_name)}>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    <span>Agregar como Amigo</span>
-                  </DropdownMenuItem>
+                  {!isMe && !isFriend && !isPending && (
+                    <DropdownMenuItem onClick={() => handleAddFriend(student)}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      <span>Agregar como Amigo</span>
+                    </DropdownMenuItem>
+                  )}
+                  {isFriend && (
+                    <div className="px-2 py-1.5 text-sm flex items-center gap-2 text-green-500">
+                      <Check className="w-4 h-4" /> Amigo
+                    </div>
+                  )}
+                  {isPending && !isFriend && (
+                    <div className="px-2 py-1.5 text-sm flex items-center gap-2 text-yellow-500">
+                      <Clock className="w-4 h-4" /> Pendiente
+                    </div>
+                  )}
                   <DropdownMenuItem onClick={() => handleSendMessage(student.display_name)}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     <span>Enviar Mensaje</span>
@@ -100,7 +142,7 @@ const EnrolledStudents = ({ students, programId, isAdmin = false }) => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          ))}
+          )})}
         </div>
       ) : (
         <div className="text-center py-6">

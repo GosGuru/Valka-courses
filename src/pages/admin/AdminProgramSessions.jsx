@@ -163,6 +163,7 @@ const AdminProgramSessions = () => {
     setEditedData({
       title: session.title,
       video_url: session.video_url || '',
+  objective: session.objective || '',
       exercises: JSON.stringify(session.exercises || [], null, 2),
     });
     // Inicializamos la vista previa con lo que ya tiene la sesión
@@ -178,6 +179,8 @@ const AdminProgramSessions = () => {
   const handleCancelEdit = () => {
     setEditingSession(null);
     setEditedData({});
+    setPasteText('');
+    setParsedPreview([]);
   };
 
   const handleSaveEdit = async () => {
@@ -188,6 +191,7 @@ const AdminProgramSessions = () => {
       const updatedSessionData = {
         title: editedData.title,
         video_url: editedData.video_url,
+  objective: editedData.objective?.trim() || null,
         exercises: parsedExercises,
       };
 
@@ -350,10 +354,10 @@ const AdminProgramSessions = () => {
           <Reorder.Item key={week.id} value={week} className="overflow-hidden border rounded-lg bg-card border-border">
             <div className="flex flex-col gap-2 p-4 border-b bg-muted/50 border-border">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center min-w-0 gap-2">
                   <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab shrink-0" />
                   {editingWeekId === week.id ? (
-                    <div className="flex items-center gap-2 w-full">
+                    <div className="flex items-center w-full gap-2">
                       <Input
                         autoFocus
                         value={weekLabelDraft}
@@ -396,7 +400,7 @@ const AdminProgramSessions = () => {
                     <button
                       type="button"
                       onClick={() => { setEditingWeekId(week.id); setWeekLabelDraft(week.label || ''); }}
-                      className="text-left text-xl font-semibold truncate hover:underline"
+                      className="text-xl font-semibold text-left truncate hover:underline"
                     >
                       {week.label}
                     </button>
@@ -447,6 +451,12 @@ const AdminProgramSessions = () => {
                           value={editedData.video_url}
                           onChange={handleInputChange}
                         />
+                        <Input
+                          name="objective"
+                          placeholder="Objetivo de la sesión (ej: Mejorar técnica de sentadilla)"
+                          value={editedData.objective}
+                          onChange={handleInputChange}
+                        />
 
                         <div className="space-y-2">
                           <Textarea
@@ -458,6 +468,7 @@ const AdminProgramSessions = () => {
                           <p className="text-xs text-muted-foreground">
                             Pega la tabla con columnas: Ejercicio | Series | Repeticiones | Carga | Descanso. Se convertirá automáticamente a JSON y podrás previsualizarla abajo.
                           </p>
+                          <p className="text-[10px] text-muted-foreground">También puedes añadir una línea que contenga la palabra "Objetivo:" para capturarla automáticamente.</p>
 
                           {parsedPreview && parsedPreview.length > 0 && (
                             <div className="p-3 border rounded-md border-border">

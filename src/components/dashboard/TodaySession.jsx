@@ -104,6 +104,12 @@ const TodaySession = ({ activeSession, allSessions, completedSessionIds = [], on
             )}
           </div>
 
+          {activeSession.objective && (
+            <div className="p-3 text-sm border rounded-md bg-primary/5 border-primary/40">
+              <span className="font-semibold">🎯 Objetivo:</span> {activeSession.objective}
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>

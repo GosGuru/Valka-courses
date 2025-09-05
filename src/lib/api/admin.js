@@ -60,13 +60,22 @@ export const adminGetProgramWithWeeksAndSessions = async (programId) => {
 };
 
 export const adminUpdateSession = async (sessionId, sessionData) => {
-  const { data, error } = await supabase
+  // Intentar incluir campo "objective" si existe en la BD; si no, reintentar sin él
+  let { data, error } = await supabase
     .from('program_sessions')
     .update(sessionData)
     .eq('id', sessionId)
     .select()
     .single();
-
+  if (error && /objective/i.test(error.message)) {
+    const { objective, ...rest } = sessionData;
+    ({ data, error } = await supabase
+      .from('program_sessions')
+      .update(rest)
+      .eq('id', sessionId)
+      .select()
+      .single());
+  }
   if (error) throw error;
   return data;
 };
@@ -125,12 +134,21 @@ export const adminCreateSession = async (weekId, sessionData = {}) => {
     session_order: nextOrder,
     exercises: sessionData.exercises || [],
     video_url: sessionData.video_url || null,
+    objective: sessionData.objective || null,
   };
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('program_sessions')
     .insert([base])
     .select('*')
     .single();
+  if (error && /objective/i.test(error.message)) {
+    const { objective, ...rest } = base;
+    ({ data, error } = await supabase
+      .from('program_sessions')
+      .insert([rest])
+      .select('*')
+      .single());
+  }
   if (error) throw error;
   return data;
 };
@@ -155,6 +173,7 @@ export const adminDuplicateWeek = async (weekId) => {
       title: `${s.title} (Copia)` ,
       exercises: s.exercises || [],
       video_url: s.video_url || null,
+  objective: s.objective || null,
     });
   }
   return newWeek;
@@ -171,6 +190,7 @@ export const adminDuplicateSession = async (sessionId) => {
     title: `${session.title} (Copia)`,
     exercises: session.exercises || [],
     video_url: session.video_url || null,
+  objective: session.objective || null,
   });
   return duplicated;
 };
@@ -264,13 +284,23 @@ export const adminDeleteLessonCategory = async (id) => {
 };
 
 export const adminCreateLesson = async (lessonData) => {
-  const { data, error } = await supabase.from('lessons').insert([lessonData]).select();
+  // Intento inicial incluyendo todos los campos enviados desde el formulario
+  let { data, error } = await supabase.from('lessons').insert([lessonData]).select();
+  // Si la columna 'applicable_task' no existe en la tabla, rehacer el insert sin ese campo
+  if (error && /applicable_task/i.test(error.message)) {
+    const { applicable_task, ...rest } = lessonData;
+    ({ data, error } = await supabase.from('lessons').insert([rest]).select());
+  }
   if (error) throw error;
   return data;
 };
 
 export const adminUpdateLesson = async (id, lessonData) => {
-  const { data, error } = await supabase.from('lessons').update(lessonData).eq('id', id).select();
+  let { data, error } = await supabase.from('lessons').update(lessonData).eq('id', id).select();
+  if (error && /applicable_task/i.test(error.message)) {
+    const { applicable_task, ...rest } = lessonData;
+    ({ data, error } = await supabase.from('lessons').update(rest).eq('id', id).select());
+  }
   if (error) throw error;
   return data;
 };
