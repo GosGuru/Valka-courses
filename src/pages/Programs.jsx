@@ -193,6 +193,11 @@ const Programs = () => {
         <p className="max-w-3xl mx-auto text-lg text-muted-foreground md:text-xl">
           Descubre programas diseñados por expertos para llevarte al siguiente nivel.
         </p>
+        <p className="mt-4 text-sm text-primary">
+          <Link to="/calistenia-durazno" className="underline underline-offset-4 hover:text-primary/80">
+            Ver cómo son las clases locales en Durazno →
+          </Link>
+        </p>
       </motion.div>
 
       {session && activeEnrollment && (

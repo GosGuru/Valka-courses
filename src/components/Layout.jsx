@@ -247,21 +247,25 @@ const Layout = ({ children, isPublic = false }) => {
 
   const currentNavItems = isPublic ? navItemsPublic : navItemsPrivate;
 
-  return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-background text-foreground">
-      <DesktopSidebar 
-        navItems={isPublic ? navItemsPublic : [{ path: '/dashboard', icon: Home, label: 'Dashboard' }, { path: '/programs', icon: Target, label: 'Programas' }, { path: '/library', icon: Library, label: 'Biblioteca' }]}
-        adminNavItems={adminNavItems}
-        profile={profile}
-        location={location}
-        handleSignOut={handleSignOut}
-        isAdminToolsOpen={isAdminToolsOpen}
-        setIsAdminToolsOpen={setIsAdminToolsOpen}
-      />
-      
-      {!isPublic && profile && <MobileHeader profile={profile} handleSignOut={handleSignOut} adminNavItems={adminNavItems}/>}
+  const showSidebar = !isPublic && session; // menú solo para usuarios logueados
 
-      <main className="flex-1 lg:p-4 lg:pr-0 pb-16 lg:pb-0">
+  return (
+    <div className={`min-h-screen bg-background text-foreground ${showSidebar ? 'flex flex-col lg:flex-row' : 'flex flex-col'}`}>
+      {showSidebar && (
+        <DesktopSidebar 
+          navItems={[{ path: '/dashboard', icon: Home, label: 'Dashboard' }, { path: '/programs', icon: Target, label: 'Programas' }, { path: '/library', icon: Library, label: 'Biblioteca' }]}
+          adminNavItems={adminNavItems}
+            profile={profile}
+            location={location}
+            handleSignOut={handleSignOut}
+            isAdminToolsOpen={isAdminToolsOpen}
+            setIsAdminToolsOpen={setIsAdminToolsOpen}
+        />
+      )}
+
+      {showSidebar && profile && <MobileHeader profile={profile} handleSignOut={handleSignOut} adminNavItems={adminNavItems}/>}
+
+      <main className={`flex-1 ${showSidebar ? 'lg:p-4 lg:pr-0 pb-16 lg:pb-0' : ''}`}>
         <motion.div
           key={location.pathname}
           initial={{ opacity: 0, y: 20 }}
@@ -274,7 +278,7 @@ const Layout = ({ children, isPublic = false }) => {
         </motion.div>
       </main>
 
-      {!isPublic && profile && <MobileBottomNav navItems={navItemsPrivate} location={location} />}
+      {showSidebar && profile && <MobileBottomNav navItems={navItemsPrivate} location={location} />}
     </div>
   );
 };

@@ -21,6 +21,7 @@ import AdminLibrary from "@/pages/admin/AdminLibrary";
 import AuthPage from "@/pages/Auth";
 import Layout from "@/components/Layout";
 import LandingPage from "@/pages/LandingPage";
+import CalisteniaDurazno from "@/pages/CalisteniaDurazno";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -76,6 +77,14 @@ const App = () => {
               onLoginClick={() => openAuthModal("login")}
               onRegisterClick={() => openAuthModal("register")}
             />
+          }
+        />
+        <Route
+          path="/calistenia-durazno"
+          element={
+            <Layout isPublic>
+              <CalisteniaDurazno />
+            </Layout>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
