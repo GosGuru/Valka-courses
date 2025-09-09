@@ -28,6 +28,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getUserProfile } from "@/lib/api/user";
 import AdminProgramSessions from "@/pages/admin/AdminProgramSessions";
 import AdminRegistrations from "@/pages/admin/AdminRegistrations";
+import Chatbot from "@/components/Chatbot";
 
 
 const App = () => {
@@ -188,6 +189,7 @@ const App = () => {
         </AnimatePresence>
       </Router>
       <Toaster />
+      <Chatbot />
     </>
   );
 };

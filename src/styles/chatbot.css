@@ -1,0 +1,573 @@
+/* Estilos personalizados para el chatbot n8n - Tema Valka */
+:root {
+  /* Colores principales de Valka */
+  --chat--color-primary: hsl(45, 68%, 53%) !important; /* Dorado */
+  --chat--color-primary-shade-50: hsl(45, 68%, 48%) !important;
+  --chat--color-primary-shade-100: hsl(45, 68%, 43%) !important;
+  --chat--color-secondary: hsl(260, 70%, 35%) !important; /* Morado */
+  --chat--color-secondary-shade-50: hsl(260, 70%, 30%) !important;
+  
+  /* Colores de fondo y texto */
+  --chat--color-white: hsl(0, 0%, 98%) !important;
+  --chat--color-light: hsl(0, 0%, 8%) !important; /* Fondo de tarjetas */
+  --chat--color-light-shade-50: hsl(0, 0%, 12%) !important;
+  --chat--color-light-shade-100: hsl(0, 0%, 15%) !important;
+  --chat--color-medium: hsl(0, 0%, 14%) !important; /* Bordes */
+  --chat--color-dark: hsl(0, 0%, 4%) !important; /* Fondo principal */
+  --chat--color-disabled: hsl(0, 0%, 60%) !important;
+  --chat--color-typing: hsl(0, 0%, 60%) !important;
+
+  /* Espaciado y bordes */
+  --chat--spacing: 1rem !important;
+  --chat--border-radius: 0.5rem !important; /* Coincide con Valka */
+  --chat--transition-duration: 0.15s !important;
+
+  /* Dimensiones de la ventana */
+  --chat--window--width: 400px !important;
+  --chat--window--height: 600px !important;
+
+  /* Header */
+  --chat--header-height: auto !important;
+  --chat--header--padding: var(--chat--spacing) !important;
+  --chat--header--background: var(--chat--color-dark) !important;
+  --chat--header--color: var(--chat--color-white) !important;
+  --chat--header--border-top: none !important;
+  --chat--header--border-bottom: 1px solid var(--chat--color-medium) !important;
+  --chat--heading--font-size: 1.5em !important;
+  --chat--subtitle--font-size: 0.9em !important;
+  --chat--subtitle--line-height: 1.4 !important;
+
+  /* Área de texto */
+  --chat--textarea--height: 50px !important;
+
+  /* Mensajes */
+  --chat--message--font-size: 0.95rem !important;
+  --chat--message--padding: var(--chat--spacing) !important;
+  --chat--message--border-radius: var(--chat--border-radius) !important;
+  --chat--message-line-height: 1.6 !important;
+  
+  /* Mensajes del bot */
+  --chat--message--bot--background: var(--chat--color-light) !important;
+  --chat--message--bot--color: var(--chat--color-white) !important;
+  --chat--message--bot--border: 1px solid var(--chat--color-medium) !important;
+  
+  /* Mensajes del usuario */
+  --chat--message--user--background: var(--chat--color-primary) !important;
+  --chat--message--user--color: var(--chat--color-dark) !important;
+  --chat--message--user--border: none !important;
+  
+  /* Código */
+  --chat--message--pre--background: rgba(255, 255, 255, 0.05) !important;
+
+  /* Botón toggle */
+  --chat--toggle--background: var(--chat--color-primary) !important;
+  --chat--toggle--hover--background: var(--chat--color-primary-shade-50) !important;
+  --chat--toggle--active--background: var(--chat--color-primary-shade-100) !important;
+  --chat--toggle--color: var(--chat--color-dark) !important;
+  --chat--toggle--size: 64px !important;
+}
+
+/* Contenedor principal del chatbot */
+#valka-chatbot-container {
+  font-family: 'Bebas Neue', sans-serif !important;
+  letter-spacing: 0.02em !important;
+  z-index: 9999 !important;
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+}
+
+/* Estilos para el widget de n8n */
+[data-chat-widget] {
+  z-index: 9999 !important;
+}
+
+/* Botón toggle personalizado */
+[data-chat-toggle] {
+  background: hsl(45, 68%, 53%) !important; /* Dorado original de VALKA */
+  color: hsl(0, 0%, 4%) !important; /* Negro para contraste */
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.3s ease !important;
+  font-size: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+
+[data-chat-toggle]:hover {
+  background: hsl(45, 68%, 48%) !important; /* Dorado más oscuro en hover */
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Ventana del chat */
+[data-chat-window] {
+  background: hsl(0, 0%, 4%) !important;
+  border: 1px solid hsl(0, 0%, 14%) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+/* Header del chat */
+[data-chat-header] {
+  background: hsl(0, 0%, 4%) !important;
+  color: hsl(0, 0%, 98%) !important;
+  border-bottom: 1px solid hsl(0, 0%, 14%) !important;
+  padding: 1rem !important;
+}
+
+/* Input del chat - Configuración robusta */
+[data-chat-input] {
+  padding: 16px !important;
+  background: hsl(0, 0%, 4%) !important;
+  border-top: 1px solid hsl(0, 0%, 14%) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-end !important;
+  gap: 12px !important;
+  min-height: 70px !important;
+}
+
+[data-chat-input] textarea {
+  background: hsl(0, 0%, 10%) !important;
+  border: 2px solid hsl(45, 68%, 53%) !important;
+  color: hsl(0, 0%, 98%) !important;
+  font-family: 'Segoe UI', sans-serif !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  padding: 12px !important;
+  min-height: 44px !important;
+  max-height: 120px !important;
+  resize: vertical !important;
+  flex: 1 !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  line-height: 1.4 !important;
+}
+
+[data-chat-input] textarea:focus {
+  border-color: hsl(45, 68%, 48%) !important;
+  box-shadow: 0 0 0 3px rgba(184, 147, 78, 0.3) !important;
+}
+
+[data-chat-input] textarea::placeholder {
+  color: hsl(0, 0%, 60%) !important;
+  opacity: 1 !important;
+}
+
+/* Botón de envío mejorado */
+[data-chat-input] button {
+  background: hsl(45, 68%, 53%) !important;
+  color: hsl(0, 0%, 4%) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  min-width: 60px !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+[data-chat-input] button:hover {
+  background: hsl(45, 68%, 48%) !important;
+  transform: translateY(-1px) !important;
+}
+
+[data-chat-input] button:active {
+  transform: translateY(0) !important;
+}
+
+/* Mensajes */
+[data-chat-message] {
+  animation: slideInUp 0.3s ease-out !important;
+  margin-bottom: 0.5rem !important;
+}
+
+[data-chat-message="bot"] {
+  background: hsl(0, 0%, 8%) !important;
+  color: hsl(0, 0%, 98%) !important;
+  border: 1px solid hsl(0, 0%, 14%) !important;
+}
+
+[data-chat-message="user"] {
+  background: hsl(45, 68%, 53%) !important;
+  color: hsl(0, 0%, 4%) !important;
+}
+
+/* Área de mensajes */
+[data-chat-messages] {
+  background: hsl(0, 0%, 4%) !important;
+  padding: 1rem !important;
+}
+
+/* Scrollbar personalizada */
+[data-chat-messages]::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+[data-chat-messages]::-webkit-scrollbar-track {
+  background: hsl(0, 0%, 8%) !important;
+}
+
+[data-chat-messages]::-webkit-scrollbar-thumb {
+  background: hsl(0, 0%, 14%) !important;
+  border-radius: 3px !important;
+}
+
+[data-chat-messages]::-webkit-scrollbar-thumb:hover {
+  background: hsl(45, 68%, 53%) !important;
+}
+
+/* Animación para los mensajes */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ocultar SOLO el texto de marca "Powered by" sin romper el input */
+/* 1. Footer general visible de nuevo */
+[data-chat-footer] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* 2. Contenedor del input dentro del footer (asegurar visualización) */
+[data-chat-footer] [data-chat-input] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  background: hsl(0,0%,4%) !important;
+  border-top: 1px solid hsl(0,0%,14%) !important;
+}
+
+/* 3. Ocultar solo spans o elementos que contengan marca */
+[data-chat-footer] [data-powered-by],
+[data-chat-footer] .powered,
+[data-chat-footer] [class*="powered"],
+[data-chat-footer] span:has(> a[href*="n8n"]),
+span[data-powered-by],
+span[class*="powered"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* 4. Reset para evitar que reglas previas sigan ocultando cosas */
+[data-chat-footer] * {
+  box-sizing: border-box !important;
+}
+
+/* (Removido el uso de :contains por no ser estándar y causar conflictos) */
+
+/* Mejorar legibilidad general */
+[data-chat-window] * {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  line-height: 1.5 !important;
+}
+
+[data-chat-message] {
+  font-size: 14px !important;
+  padding: 12px !important;
+  margin-bottom: 8px !important;
+  border-radius: 8px !important;
+}
+
+/* Asegurar que todos los elementos del input sean visibles */
+[data-chat-input],
+[data-chat-input] *,
+[data-chat-input] textarea,
+[data-chat-input] button {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+}
+
+/* Override para elementos específicos del input */
+[data-chat-input] {
+  display: flex !important;
+}
+
+[data-chat-input] textarea {
+  display: block !important;
+}
+
+[data-chat-input] button {
+  display: flex !important;
+}
+
+/* Selectores específicos para el input de n8n */
+.n8n-chat [data-chat-input],
+.n8n-chat-input,
+[class*="chat-input"],
+[id*="chat-input"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* Textarea específicos */
+.n8n-chat textarea,
+[data-chat-input] textarea,
+[class*="chat"] textarea,
+textarea[placeholder*="escribe"],
+textarea[placeholder*="type"],
+textarea[placeholder*="message"] {
+  background: hsl(0, 0%, 10%) !important;
+  border: 2px solid hsl(45, 68%, 53%) !important;
+  color: hsl(0, 0%, 98%) !important;
+  padding: 12px !important;
+  font-size: 14px !important;
+  min-height: 44px !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+}
+
+/* Botones específicos */
+.n8n-chat button,
+[data-chat-input] button,
+[class*="chat"] button {
+  background: hsl(45, 68%, 53%) !important;
+  color: hsl(0, 0%, 4%) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+}
+
+/* Efecto glow para el botón */
+[data-chat-toggle]::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent, hsl(45, 68%, 53%), transparent);
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+[data-chat-toggle]:hover::before {
+  opacity: 0.7;
+}
+
+/* === Refuerzo final de visibilidad del input === */
+[data-chat-footer] [data-chat-input],
+.n8n-chat [data-chat-input] {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-end !important;
+  gap: 12px !important;
+  padding: 16px !important;
+}
+
+[data-chat-footer] [data-chat-input] textarea,
+.n8n-chat [data-chat-input] textarea {
+  display: block !important;
+  background: hsl(0,0%,10%) !important;
+  border: 2px solid hsl(45,68%,53%) !important;
+  color: hsl(0,0%,98%) !important;
+  min-height: 44px !important;
+  max-height: 140px !important;
+  resize: vertical !important;
+  padding: 12px !important;
+  font-size: 14px !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+[data-chat-footer] [data-chat-input] button,
+.n8n-chat [data-chat-input] button {
+  display: flex !important;
+  background: hsl(45,68%,53%) !important;
+  color: hsl(0,0%,4%) !important;
+  border: none !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  height: 44px !important;
+  transition: background .2s ease, transform .15s ease !important;
+}
+
+[data-chat-footer] [data-chat-input] button:hover,
+.n8n-chat [data-chat-input] button:hover {
+  background: hsl(45,68%,48%) !important;
+  transform: translateY(-1px) !important;
+}
+
+[data-chat-footer] [data-chat-input] button:active,
+.n8n-chat [data-chat-input] button:active {
+  transform: translateY(0) !important;
+}
+
+/* === Ocultar scrollbar del textarea del input === */
+[data-chat-footer] [data-chat-input] textarea,
+.n8n-chat [data-chat-input] textarea {
+  overflow-y: hidden !important; /* Evita mostrar scroll */
+  resize: none !important;       /* No mostrar control de resize manual */
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE / Edge antiguo */
+}
+
+/* === Loader bubble y spinner para estado "pensando" === */
+.valka-chat-loader-bubble {
+  background: hsl(0,0%,8%) !important;
+  border: 1px solid hsl(0,0%,14%) !important;
+  color: hsl(0,0%,60%) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  margin: 8px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 52px !important;
+  position: relative !important;
+  animation: fadeIn 0.25s ease forwards !important;
+  font-size: 13px !important;
+  font-style: italic !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.valka-spinner {
+  width: 42px !important;
+  height: 42px !important;
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  filter: drop-shadow(0 0 6px rgba(184,147,78,0.25));
+}
+.valka-spinner::before,
+.valka-spinner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 4px solid transparent;
+  animation: spinOuter 1.2s linear infinite;
+}
+.valka-spinner::before {
+  border-top-color: hsl(45,68%,53%);
+  border-right-color: hsl(45,68%,53%);
+  opacity: .9;
+}
+.valka-spinner::after {
+  inset: 8px;
+  border: 4px solid transparent;
+  border-bottom-color: hsl(45,68%,43%);
+  border-left-color: hsl(0,0%,30%);
+  animation: spinInner .85s linear infinite reverse;
+  opacity: .85;
+}
+@keyframes spinOuter { to { transform: rotate(360deg); } }
+@keyframes spinInner { to { transform: rotate(-360deg); } }
+
+/* Pequeño latido rudo */
+.valka-chat-loader-bubble { animation: fadeIn .25s ease forwards, bubblePulse 2s ease-in-out infinite !important; }
+@keyframes bubblePulse { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.02); } }
+
+/* Eliminados estilos de estado "pensando" del botón a solicitud del usuario */
+[data-chat-footer] [data-chat-input] textarea::-webkit-scrollbar,
+.n8n-chat [data-chat-input] textarea::-webkit-scrollbar {
+  display: none !important; /* Chrome / Safari */
+}
+
+
+/* Asegurar que el chatbot se vea en mobile */
+@media (max-width: 768px) {
+  :root {
+    --chat--window--width: calc(100vw - 40px) !important;
+    --chat--window--height: calc(100vh - 40px) !important;
+  }
+  
+  [data-chat-window] {
+    position: fixed !important;
+    top: 20px !important;
+    left: 20px !important;
+    right: 20px !important;
+    bottom: 20px !important;
+    width: calc(100vw - 40px) !important;
+    height: calc(100vh - 40px) !important;
+    border-radius: 0.5rem !important;
+  }
+
+  #valka-chatbot-container {
+    bottom: 20px !important;
+    right: 20px !important;
+  }
+}
+
+/* Estilos para hacer el chatbot más visible */
+.valka-chatbot-visible {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+/* Forzar visibilidad del botón */
+#valka-chatbot-container [data-chat-toggle],
+#valka-chatbot-container button {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: hsl(45, 68%, 53%) !important; /* Dorado original de VALKA */
+  color: hsl(0, 0%, 4%) !important; /* Negro para contraste */
+  font-weight: bold !important;
+  font-size: 20px !important;
+}
+
+.chat-powered-by{
+    opacity: 0;
+}
