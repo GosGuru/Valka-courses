@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { extractIdFromIdSlug, buildIdSlug } from '@/lib/utils';
+import { trackLessonView, trackPlayVideo } from '@/lib/trackEvent';
 import { motion } from 'framer-motion';
 // Reemplazado ReactPlayer por VideoPlayer propio multi-plataforma
 import VideoPlayer from '@/components/VideoPlayer';
@@ -11,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet';
 
 const LessonDetail = () => {
-  const { id } = useParams();
+  const { idSlug } = useParams();
+  const id = extractIdFromIdSlug(idSlug);
   const { toast } = useToast();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,7 +23,8 @@ const LessonDetail = () => {
     setLoading(true);
     try {
       const data = await getLessonById(id);
-      setLesson(data);
+  setLesson(data);
+  trackLessonView(data);
     } catch (error) {
       toast({
         title: "Error al cargar la lección",
@@ -68,6 +72,25 @@ const LessonDetail = () => {
       <Helmet>
         <title>{`${lesson.title} | VALKA`}</title>
         <meta name="description" content={`Aprende sobre ${lesson.title} en la biblioteca de VALKA.`} />
+  <link rel="canonical" href={`https://entrenaconvalka.com/library/${buildIdSlug(lesson.id, lesson.title)}`} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context":"https://schema.org",
+          "@type":"BreadcrumbList",
+          "itemListElement":[
+            {"@type":"ListItem","position":1,"name":"Biblioteca","item":"https://entrenaconvalka.com/library"},
+            {"@type":"ListItem","position":2,"name": lesson.title, "item": `https://entrenaconvalka.com/library/${buildIdSlug(lesson.id, lesson.title)}`}
+          ]
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context":"https://schema.org",
+          "@type":"Article",
+          "headline": lesson.title,
+          "about": lesson.category?.name,
+          "description": `Aprende sobre ${lesson.title}`,
+          "author": {"@type":"Organization","name":"VALKA"},
+          "publisher": {"@type":"Organization","name":"VALKA"},
+          "mainEntityOfPage": `https://entrenaconvalka.com/library/${buildIdSlug(lesson.id, lesson.title)}`
+        })}</script>
       </Helmet>
       <motion.div
         initial={{ opacity: 0 }}
@@ -100,7 +123,7 @@ const LessonDetail = () => {
           <div className="overflow-hidden border rounded-lg bg-card border-border">
             {lesson.video_url ? (
               <div className="aspect-video">
-                <VideoPlayer url={lesson.video_url} className="rounded" />
+                <VideoPlayer url={lesson.video_url} className="rounded" onPlay={() => trackPlayVideo(lesson)} />
               </div>
             ) : (
               <div className="flex items-center justify-center aspect-video bg-muted/10 text-muted-foreground">

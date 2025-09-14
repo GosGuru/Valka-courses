@@ -22,6 +22,7 @@ import AuthPage from "@/pages/Auth";
 import Layout from "@/components/Layout";
 import LandingPage from "@/pages/LandingPage";
 import CalisteniaDurazno from "@/pages/CalisteniaDurazno";
+import CalisteniaUruguay from "@/pages/CalisteniaUruguay";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -88,6 +89,14 @@ const App = () => {
             </Layout>
           }
         />
+        <Route
+          path="/calistenia-uruguay"
+          element={
+            <Layout isPublic>
+              <CalisteniaUruguay />
+            </Layout>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route
           path="/programs"
@@ -98,7 +107,7 @@ const App = () => {
           }
         />
         <Route
-          path="/programs/:id"
+          path="/programs/:idSlug"
           element={
             <Layout isPublic>
               <ProgramDetail onEnrollClick={() => openAuthModal("register")} />
@@ -114,7 +123,7 @@ const App = () => {
           }
         />
         <Route
-          path="/library/:id"
+          path="/library/:idSlug"
           element={
             <Layout isPublic>
               <LessonDetail />
@@ -141,9 +150,10 @@ const App = () => {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/programs" element={<Programs />} />
-        <Route path="/programs/:id" element={<ProgramDetail />} />
+  <Route path="/programs/:idSlug" element={<ProgramDetail />} />
         <Route path="/library" element={<Library />} />
-        <Route path="/library/:id" element={<LessonDetail />} />
+  <Route path="/library/:idSlug" element={<LessonDetail />} />
+  <Route path="/calistenia-uruguay" element={<CalisteniaUruguay />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:id" element={<UserProfile />} />
         <Route path="/profile/edit" element={<EditProfile />} />

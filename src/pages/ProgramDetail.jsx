@@ -1,7 +1,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { extractIdFromIdSlug, buildIdSlug } from '@/lib/utils';
+import { trackProgramView, trackEnroll } from '@/lib/trackEvent';
 import { 
   ArrowLeft, 
   Target, 
@@ -33,7 +36,8 @@ const weekDays = [
 ];
 
 const ProgramDetail = ({ onEnrollClick }) => {
-  const { id } = useParams();
+  const { idSlug } = useParams();
+  const id = extractIdFromIdSlug(idSlug);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session } = useAuth();
@@ -56,7 +60,8 @@ const ProgramDetail = ({ onEnrollClick }) => {
     setLoading(true);
     try {
       const programData = await getProgramById(id);
-      setProgram(programData);
+  setProgram(programData);
+  trackProgramView(programData);
       if (session) {
         const currentEnrollment = await getActiveEnrollment();
         setActiveEnrollment(currentEnrollment);
@@ -104,7 +109,8 @@ const ProgramDetail = ({ onEnrollClick }) => {
       return;
     }
     try {
-      await enrollInProgram(id, selectedDays);
+  await enrollInProgram(id, selectedDays);
+  trackEnroll(program);
       toast({
         title: "🎉 ¡Inscripción Exitosa!",
         description: "Te has inscrito al programa. ¡Comienza tu transformación ahora!"
@@ -199,11 +205,38 @@ const ProgramDetail = ({ onEnrollClick }) => {
     : 'N/A';
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-4 space-y-6 md:p-6"
-    >
+    <>
+      <Helmet>
+        <title>{program.name} | Programa de Calistenia | VALKA</title>
+        <meta name="description" content={program.description?.slice(0,160) || 'Programa de calistenia en VALKA'} />
+  <link rel="canonical" href={`https://entrenaconvalka.com/programs/${buildIdSlug(program.id, program.name)}`} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context":"https://schema.org",
+          "@type":"BreadcrumbList",
+          "itemListElement":[
+            {"@type":"ListItem","position":1,"name":"Programas","item":"https://entrenaconvalka.com/programs"},
+            {"@type":"ListItem","position":2,"name": program.name, "item": `https://entrenaconvalka.com/programs/${buildIdSlug(program.id, program.name)}`}
+          ]
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context":"https://schema.org",
+          "@type":"Course",
+          "name": program.name,
+          "description": program.description,
+          "provider": {"@type":"Organization","name":"VALKA","sameAs":"https://entrenaconvalka.com"},
+          "educationalLevel": getLevelText(program.level),
+          "aggregateRating": program.reviews?.length ? {
+            "@type":"AggregateRating",
+            "ratingValue": averageRating,
+            "reviewCount": program.reviews.length
+          } : undefined
+        })}</script>
+      </Helmet>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-4 space-y-6 md:p-6"
+      >
       <div className="flex items-center gap-4 mb-6">
         <Link to="/programs">
           <Button variant="outline" size="sm">
@@ -478,7 +511,8 @@ const ProgramDetail = ({ onEnrollClick }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 

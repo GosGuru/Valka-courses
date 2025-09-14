@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getPrograms, enrollInProgram, getActiveEnrollment, unenrollFromProgram } from '@/lib/api';
+import { buildIdSlug } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -246,7 +247,7 @@ const Programs = () => {
                 className="flex flex-col transition-all duration-300 glass-card hover:border-primary/50"
               >
                 <div className="relative">
-                  <Link to={`/programs/${program.id}`}>
+                  <Link to={`/programs/${buildIdSlug(program.id, program.name)}`}>
                     <img  
                       alt={`Programa ${program.name}`}
                       className="object-cover w-full h-48 rounded-t-xl"
@@ -281,7 +282,7 @@ const Programs = () => {
                   </div>
 
                   <div className="flex gap-2 pt-4 mt-4 border-t border-border">
-                    <Link to={`/programs/${program.id}`} className="flex-1">
+                    <Link to={`/programs/${buildIdSlug(program.id, program.name)}`} className="flex-1">
                       <Button variant="outline" className="w-full">
                         <Play className="w-4 h-4 mr-2" />
                         Ver Detalles

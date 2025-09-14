@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from 'react-helmet';
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -9,8 +10,24 @@ const WA_BASE = "https://wa.me/59894734367";
 const waLink = (text) => `${WA_BASE}?text=${encodeURIComponent(text)}`;
 
 const LandingPage = ({ onLoginClick, onRegisterClick }) => {
+  const faq = [
+    { q: '¿Cuánto sale entrenar en VALKA?', a: 'Ofrecemos planes escalables según tu nivel y objetivos. Escribinos por WhatsApp para opciones actuales y promos locales.' },
+    { q: '¿En cuánto tiempo veo resultados?', a: 'En 4–6 semanas mejoras control y fuerza base. Cambios visuales suelen apreciarse entre la semana 8 y 16 con consistencia.' },
+    { q: '¿Qué diferencia a VALKA de una rutina genérica?', a: 'Nuestro enfoque prioriza progresiones medibles, técnica y prevención de sobreuso. Menos ruido, más avance real.' },
+    { q: '¿Cuántos días por semana necesito?', a: 'Podés progresar con 3 días. Ideal 4–5 si buscás fuerza + skills. Ajustamos según recuperación y vida personal.' },
+    { q: '¿Puedo empezar sin equipo?', a: 'Sí. Iniciamos con palancas básicas y patrones fundamentales. Luego sugerimos barra, anillas y banda de resistencia.' }
+  ];
+  const faqLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+  };
+
   return (
     <div className="relative flex flex-col min-h-screen bg-background text-foreground">
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(faqLd)}</script>
+      </Helmet>
       <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-6">
         <h1 className="text-4xl tracking-wider font-logo text-primary">
           VALKA
@@ -204,6 +221,19 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
           </div>
         </div>
       </motion.section>
+      {/* FAQ inline visible (apoya intención de búsqueda) */}
+      <section className="max-w-4xl px-6 pb-20 mx-auto space-y-6">
+        <h2 className="text-2xl font-bold tracking-tight md:text-3xl text-primary">Preguntas Frecuentes</h2>
+        <div className="space-y-4">
+          {faq.map(item => (
+            <div key={item.q} className="p-4 border rounded-lg bg-card/40 border-border/60">
+              <h3 className="mb-1 text-base font-semibold">{item.q}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">¿Tenés otra duda? Escribinos directamente y te respondemos en menos de 24h.</p>
+      </section>
     </div>
   );
 };

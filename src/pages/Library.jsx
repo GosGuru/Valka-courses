@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getLessonCategoriesWithLessons } from '@/lib/api';
+import { buildIdSlug } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 
 const Library = () => {
@@ -97,7 +98,7 @@ const Library = () => {
                           {lesson.bullets[0]}
                         </p>
                       )}
-                      <Link to={`/library/${lesson.id}`}>
+                      <Link to={`/library/${buildIdSlug(lesson.id, lesson.title)}`}>
                         <Button 
                           variant="link" 
                           className="p-0 text-base font-medium transition-colors text-primary hover:text-primary/80"

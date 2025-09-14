@@ -1,0 +1,13 @@
+# robots.txt para entrenaconvalka.com
+# Objetivo: permitir indexación general y proteger rutas privadas.
+User-agent: *
+Allow: /
+
+# Bloquear rutas sensibles (no index)
+Disallow: /admin
+Disallow: /profile/edit
+
+# Evitar parámetros de tracking comunes (si los usas, comenta esta línea en caso de necesitar indexar variantes)
+# Crawl-delay no se recomienda normalmente, Google lo ignora.
+
+Sitemap: https://entrenaconvalka.com/sitemap.xml
