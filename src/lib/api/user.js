@@ -1,7 +1,4 @@
 import { supabase } from '@/lib/customSupabaseClient';
-import * as dateFnsTz from 'date-fns-tz';
-
-const TIME_ZONE = 'America/Montevideo';
 
 export const getActiveEnrollment = async (userId = null) => {
   let userToFetch = userId;
@@ -81,7 +78,7 @@ export const getTodaySession = async (enrollment) => {
     if (weeksError) throw weeksError;
     if (!programWeeks || programWeeks.length === 0) return { noSessions: true };
 
-    const today = dateFnsTz.utcToZonedTime(new Date(), TIME_ZONE);
+    const today = new Date();
     // getDay() returns 0 for Sunday, 1 for Monday, etc.
     // training_days seems to store ['Sun', 'Mon', 'Tue', ...]. Let's adapt.
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

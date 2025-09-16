@@ -24,6 +24,17 @@ export function buildIdSlug(id, name) {
 
 export function extractIdFromIdSlug(idSlug) {
 	if (!idSlug) return null;
+	
+	// UUID format: 8-4-4-4-12 characters (separated by hyphens)
+	// So we need to match the pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+	const uuidRegex = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+	const match = idSlug.match(uuidRegex);
+	
+	if (match) {
+		return match[1];
+	}
+	
+	// Fallback for non-UUID IDs (if any exist)
 	const idPart = idSlug.split('-')[0];
 	return idPart;
 }
