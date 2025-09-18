@@ -112,3 +112,27 @@ html {
   transform: translate(-50%, -50%) !important;
   max-height: auto;
 }
+
+/* Fondo dinámico con gradiente animado */
+.valka-animated-bg {
+  position: relative;
+  background: linear-gradient(120deg, hsla(260,70%,35%,0.35), hsla(45,68%,53%,0.25), hsla(260,70%,35%,0.35));
+  background-size: 200% 200%;
+  animation: valkaGradientShift 18s ease-in-out infinite;
+}
+
+@keyframes valkaGradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Overlay sutil para mejorar legibilidad sobre fondos animados */
+.valka-animated-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 10%, rgba(0,0,0,0.25), transparent 40%),
+              radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.25), transparent 45%);
+  pointer-events: none;
+}

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Target, Brain, Users, Flame, Compass } from "lucide-react";
+import { Link as RouterLink } from "react-router-dom";
 
 // Helper WhatsApp (faltaba en este archivo)
 const WA_BASE = "https://wa.me/59894734367";
@@ -73,6 +74,11 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
             >
               Únete ahora
             </Button>
+            <RouterLink to="/chat" className="ml-3 inline-block">
+              <Button variant="outline" size="lg" className="px-8 py-6 text-lg rounded-full">
+                Probar el Chat
+              </Button>
+            </RouterLink>
             <div className="flex items-center justify-center gap-1 mt-4 text-sm group">
               <Link
                 to="/calistenia-durazno"
@@ -198,6 +204,12 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
               >
                 Landing local <Compass className="w-4 h-4 ml-1" />
               </a>
+              <RouterLink
+                to="/chat"
+                className="inline-flex items-center text-sm font-medium rounded text-primary hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                Ir al Chat <ArrowRight className="w-4 h-4 ml-1" />
+              </RouterLink>
             </div>
 
             <p className="mt-4 text-xs leading-relaxed text-muted-foreground max-w-prose">

@@ -29,7 +29,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getUserProfile } from "@/lib/api/user";
 import AdminProgramSessions from "@/pages/admin/AdminProgramSessions";
 import AdminRegistrations from "@/pages/admin/AdminRegistrations";
-import Chatbot from "@/components/Chatbot";
+import FlowiseChat from "@/pages/FlowiseChat";
+import PoliticaPrivacidad from "@/pages/PoliticaPrivacidad";
 
 
 const App = () => {
@@ -79,6 +80,22 @@ const App = () => {
               onLoginClick={() => openAuthModal("login")}
               onRegisterClick={() => openAuthModal("register")}
             />
+          }
+        />
+        <Route
+          path="/politica-privacidad"
+          element={
+            <Layout isPublic>
+              <PoliticaPrivacidad />
+            </Layout>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <Layout isPublic>
+              <FlowiseChat />
+            </Layout>
           }
         />
         <Route
@@ -148,6 +165,22 @@ const App = () => {
     <Layout>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="/politica-privacidad"
+          element={
+            <Layout isPublic>
+              <PoliticaPrivacidad />
+            </Layout>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <Layout isPublic>
+              <FlowiseChat />
+            </Layout>
+          }
+        />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/programs" element={<Programs />} />
   <Route path="/programs/:idSlug" element={<ProgramDetail />} />
@@ -199,7 +232,6 @@ const App = () => {
         </AnimatePresence>
       </Router>
       <Toaster />
-      <Chatbot />
     </>
   );
 };

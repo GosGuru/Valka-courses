@@ -28,6 +28,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "date-fns": "^3.6.0",
+    "flowise-embed-react": "^3.0.3",
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.285.0",
     "papaparse": "^5.4.1",

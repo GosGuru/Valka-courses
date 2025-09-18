@@ -12,7 +12,8 @@ import {
   Shield,
   ChevronDown,
   Menu,
-  Users as UsersIcon
+  Users as UsersIcon,
+  MessageCircle
 } from 'lucide-react';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -235,6 +236,7 @@ const Layout = ({ children, isPublic = false }) => {
   const navItemsPrivate = [
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/programs', icon: Target, label: 'Programas' },
+    { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/library', icon: Library, label: 'Biblioteca' },
     { path: '/profile', icon: User, label: 'Perfil' },
   ];
@@ -253,7 +255,12 @@ const Layout = ({ children, isPublic = false }) => {
     <div className={`min-h-screen bg-background text-foreground ${showSidebar ? 'flex flex-col lg:flex-row' : 'flex flex-col'}`}>
       {showSidebar && (
         <DesktopSidebar 
-          navItems={[{ path: '/dashboard', icon: Home, label: 'Dashboard' }, { path: '/programs', icon: Target, label: 'Programas' }, { path: '/library', icon: Library, label: 'Biblioteca' }]}
+          navItems={[
+            { path: '/dashboard', icon: Home, label: 'Dashboard' },
+            { path: '/programs', icon: Target, label: 'Programas' },
+            { path: '/chat', icon: MessageCircle, label: 'Chat' },
+            { path: '/library', icon: Library, label: 'Biblioteca' }
+          ]}
           adminNavItems={adminNavItems}
             profile={profile}
             location={location}
