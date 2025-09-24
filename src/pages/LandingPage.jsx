@@ -74,7 +74,7 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
             >
               Únete ahora
             </Button>
-            <RouterLink to="/chat" className="ml-3 inline-block">
+            <RouterLink to="/chat" className="ml-3 inline-block" aria-label="Abrir chat VALKA">
               <Button variant="outline" size="lg" className="px-8 py-6 text-lg rounded-full">
                 Probar el Chat
               </Button>
