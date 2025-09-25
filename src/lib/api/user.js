@@ -295,6 +295,116 @@ export const deletePR = async (id) => {
   if (error) throw error;
 };
 
+const isObjectivesTableMissing = (error) => {
+  if (!error) return false;
+  const message = error.message || error.detail || error.hint || '';
+  return error.code === 'PGRST205' || message.includes('profile_objectives');
+};
+
+const buildTableMissingError = () => {
+  const customError = new Error('La tabla profile_objectives no existe en la base de datos.');
+  customError.code = 'OBJECTIVES_TABLE_MISSING';
+  return customError;
+};
+
+export const getUserObjectives = async (userId = null) => {
+  let userToFetch = userId;
+  if (!userToFetch) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    userToFetch = user.id;
+  }
+
+  const { data, error } = await supabase
+    .from('profile_objectives')
+    .select('*')
+    .eq('user_id', userToFetch)
+    .order('status', { ascending: true })
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    if (isObjectivesTableMissing(error)) {
+      const empty = [];
+      empty.missingTable = true;
+      return empty;
+    }
+    throw error;
+  }
+  const results = data || [];
+  results.missingTable = false;
+  return results;
+};
+
+export const createObjective = async ({ title, description, status = 'in_progress', due_date = null }) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+  if (!title || !title.trim()) throw new Error('El objetivo necesita un título.');
+
+  const payload = {
+    user_id: user.id,
+    title: title.trim(),
+    description: description?.trim() || null,
+    status,
+    due_date: due_date || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from('profile_objectives')
+    .insert(payload)
+    .select()
+    .single();
+
+  if (error) {
+    if (isObjectivesTableMissing(error)) throw buildTableMissingError();
+    throw error;
+  }
+  return data;
+};
+
+export const updateObjective = async (id, { title, description, status, due_date }) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+
+  const updates = {};
+  if (title !== undefined) updates.title = title?.trim();
+  if (description !== undefined) updates.description = description?.trim() || null;
+  if (status !== undefined) updates.status = status;
+  if (due_date !== undefined) updates.due_date = due_date || null;
+  updates.updated_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('profile_objectives')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .select()
+    .single();
+
+  if (error) {
+    if (isObjectivesTableMissing(error)) throw buildTableMissingError();
+    throw error;
+  }
+  return data;
+};
+
+export const deleteObjective = async (id) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+
+  const { error } = await supabase
+    .from('profile_objectives')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (error) {
+    if (isObjectivesTableMissing(error)) throw buildTableMissingError();
+    throw error;
+  }
+};
+
 export const getPublicUserProfile = async (profileId) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Usuario no autenticado');
@@ -303,10 +413,11 @@ export const getPublicUserProfile = async (profileId) => {
     .from('profiles').select('*').eq('id', profileId).single();
   if (profileError) throw profileError;
   
-  const [activeEnrollment, recentProgress, prs, friendship] = await Promise.all([
+  const [activeEnrollment, recentProgress, prs, objectives, friendship] = await Promise.all([
     getActiveEnrollment(profileId),
     supabase.from('session_progress').select('*, session:program_sessions(title)').eq('user_id', profileId).order('completed_at', { ascending: false }).limit(5),
     getUserPRs(profileId),
+    getUserObjectives(profileId),
     supabase.from('friends').select('*').or(`and(user_id_1.eq.${user.id},user_id_2.eq.${profileId}),and(user_id_1.eq.${profileId},user_id_2.eq.${user.id})`).maybeSingle()
   ]);
 
@@ -320,6 +431,8 @@ export const getPublicUserProfile = async (profileId) => {
     activeEnrollment,
     recentProgress: recentProgress.data,
     prs,
+    objectives,
+    objectivesMissing: Boolean(objectives?.missingTable),
     friendship: friendship.data
   };
 };

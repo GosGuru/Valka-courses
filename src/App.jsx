@@ -175,11 +175,7 @@ const App = () => {
         />
         <Route
           path="/chat"
-          element={
-            <Layout isPublic>
-              <FlowiseChat />
-            </Layout>
-          }
+          element={<FlowiseChat />}
         />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/programs" element={<Programs />} />

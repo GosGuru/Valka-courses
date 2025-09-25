@@ -1,45 +1,185 @@
 import React from "react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import ChatWidget from "../components/ChatWidget";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
-// Página de chat con header y fondo dinámico
+const STARTER_PROMPTS = [
+  "Cómo empezar dominadas",
+  "Rutina 3 días: fuerza + movilidad",
+  "Progresión para primera bandera",
+  "Plan para flexiones a pino",
+];
+
+const QUICK_ACTIONS = [
+  {
+    title: "Revisar programas activos",
+    description: "Descubrí rutinas adaptadas a tu nivel y objetivo actual.",
+    to: "/programs",
+  },
+  {
+    title: "Biblioteca técnica",
+    description: "Repasá la ejecución correcta de cada movimiento paso a paso.",
+    to: "/library",
+  },
+  {
+    title: "Actualizar tus objetivos",
+    description: "Ajustá tu perfil para que el asistente entienda tus preferencias.",
+    to: "/profile/edit",
+  },
+];
+
+const TIPS = [
+  "Contá con qué equipamiento contás para obtener progresiones realistas.",
+  "Pedí ajustes en tus rutinas actuales si sentís que están muy fáciles o difíciles.",
+  "Preguntá por progresiones paso a paso para dominar habilidades específicas.",
+  "Solicitá recomendaciones de movilidad o activación para complementar tu sesión.",
+];
+
+const PrivacyNotice = ({ className = "" }) => (
+  <div className={`rounded-2xl border px-4 py-3 text-xs leading-relaxed sm:text-sm ${className}`}>
+    <span>
+      Este chat sanitiza datos personales automáticamente. Podés usar la opción
+      <span className="font-semibold"> "No publicar mi pregunta"</span> en tu primer mensaje.
+    </span>
+    <Link
+      to="/politica-privacidad"
+      className="ml-2 font-semibold text-amber-400 transition-colors hover:text-amber-300"
+    >
+      Política de Privacidad
+    </Link>
+  </div>
+);
+
+const PublicChatShell = () => (
+  <section
+    className="relative flex min-h-screen flex-col valka-animated-bg"
+    style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0f0f0f 100%)" }}
+  >
+    <header className="sticky top-0 z-20 border-b border-white/10 bg-black/50 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-3 py-2.5 sm:px-4 md:px-6 lg:py-3">
+        <Link
+          to="/"
+          className="font-logo text-xl tracking-wider text-white transition-colors hover:text-amber-400 sm:text-2xl"
+        >
+          VALKA
+        </Link>
+        <nav className="flex items-center gap-2 text-xs sm:gap-3 sm:text-sm">
+          <Link
+            to="/programs"
+            className="rounded-lg border border-transparent px-2 py-1 text-white/80 transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white sm:px-3 sm:py-1.5"
+          >
+            Programas
+          </Link>
+          <Link
+            to="/politica-privacidad"
+            className="rounded-lg border border-transparent px-2 py-1 text-white/80 transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white sm:px-3 sm:py-1.5"
+          >
+            Privacidad
+          </Link>
+        </nav>
+      </div>
+    </header>
+
+    <div className="mx-auto w-full max-w-7xl flex-shrink-0 px-3 pb-2 pt-3 sm:px-4 md:px-6">
+      <PrivacyNotice className="border-white/20 bg-black/40 text-white/70 backdrop-blur" />
+    </div>
+
+    <div className="flex flex-1 items-center justify-center px-3 py-4 sm:px-4 md:px-6 lg:px-8">
+      <div className="h-[80vh] w-full max-w-5xl">
+        <ChatWidget />
+      </div>
+    </div>
+  </section>
+);
+
+const AuthenticatedChatShell = () => (
+  <section className="min-h-full px-4 pb-16 pt-4 sm:px-6 lg:px-8">
+    <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6">
+      <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#171720] via-[#101018] to-[#0d0d14] p-6 shadow-2xl sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400/80">
+              Asistente inteligente
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Centro de ayuda VALKA</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/70 sm:text-base">
+              Resolvé dudas sobre tu entrenamiento, pedí ajustes personalizados en rutinas y conseguí progresiones específicas en tiempo real.
+            </p>
+          </div>
+          <PrivacyNotice className="mt-2 w-full border-white/15 bg-white/5 text-white/70 backdrop-blur-sm sm:mt-0 sm:max-w-xs" />
+        </div>
+        <div className="mt-6 flex flex-wrap gap-2">
+          {STARTER_PROMPTS.map((prompt) => (
+            <span
+              key={prompt}
+              className="whitespace-nowrap rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-medium uppercase tracking-wide text-white/70"
+            >
+              {prompt}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid flex-1 gap-6 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)]">
+        <div className="flex min-h-[60vh] flex-col">
+          <ChatWidget />
+        </div>
+        <aside className="flex flex-col gap-4">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-lg backdrop-blur-sm">
+            <h2 className="text-lg font-semibold text-white">Atajos rápidos</h2>
+            <p className="mt-2 text-sm text-white/60">
+              Abrí recursos clave mientras conversás con el asistente.
+            </p>
+            <div className="mt-4 space-y-3">
+              {QUICK_ACTIONS.map((action) => (
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  className="group flex items-start justify-between rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-left transition-all hover:border-amber-400/60 hover:bg-white/[0.08]"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-white">{action.title}</p>
+                    <p className="mt-1 text-xs text-white/60">{action.description}</p>
+                  </div>
+                  <ArrowRight className="mt-1 h-4 w-4 text-amber-400 transition-transform group-hover:translate-x-1" />
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-lg backdrop-blur-sm">
+            <h2 className="text-lg font-semibold text-white">Tips para sacarle provecho</h2>
+            <ul className="mt-4 space-y-3 text-sm text-white/70">
+              {TIPS.map((tip) => (
+                <li key={tip} className="flex items-start gap-3">
+                  <span className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-amber-400/80" />
+                  <span>{tip}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+);
+
 const FlowiseChat = () => {
+  const { session } = useAuth();
+
   return (
     <>
       <Helmet>
         <title>Chat Valka</title>
         <meta name="robots" content="noindex, nofollow" />
-        <meta name="description" content="Asistente de Valka para dudas rápidas sobre calistenia." />
+        <meta
+          name="description"
+          content="Asistente de Valka para dudas rápidas sobre calistenia."
+        />
       </Helmet>
-
-      <section className="relative flex flex-col min-h-screen valka-animated-bg" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0f0f0f 100%)" }}>
-        {/* Header superior */}
-        <header className="sticky top-0 z-20 border-b border-white/10 bg-black/50 backdrop-blur-xl">
-          <div className="flex items-center justify-between w-full max-w-7xl px-3 py-2.5 mx-auto sm:px-4 md:px-6 lg:py-3">
-            <Link to="/" className="text-xl tracking-wider text-white transition-colors sm:text-2xl font-logo hover:text-amber-400">VALKA</Link>
-            <nav className="flex items-center gap-2 text-xs sm:gap-3 sm:text-sm">
-              <Link to="/programs" className="rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 text-white/80 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/20 transition-all duration-200">Programas</Link>
-              <a href="/politica-privacidad" className="rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 text-white/80 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/20 transition-all duration-200">Privacidad</a>
-            </nav>
-          </div>
-        </header>
-
-        {/* Aviso de privacidad breve */}
-        <div className="flex-shrink-0 w-full mx-auto max-w-7xl">
-          <div className="px-3 pt-3 pb-2 text-xs leading-relaxed sm:px-4 md:px-6 sm:text-sm text-white/60">
-            Este chat sanitiza datos personales automáticamente. Podés usar la opción "No publicar mi pregunta" en tu primer mensaje.
-            <a href="/politica-privacidad" className="ml-2 underline transition-colors text-amber-400 hover:text-amber-300">Política de Privacidad</a>
-          </div>
-        </div>
-
-        {/* Contenedor principal con altura fija */}
-        <div className="flex items-center justify-center flex-1 px-3 py-4 sm:px-4 md:px-6 lg:px-8">
-          <div className="w-full max-w-5xl h-[80vh]">
-            <ChatWidget />
-          </div>
-        </div>
-      </section>
+      {session ? <AuthenticatedChatShell /> : <PublicChatShell />}
     </>
   );
 };

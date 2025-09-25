@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -13,7 +13,11 @@ import {
   UserX,
   Award,
   Calendar,
-  CheckCircle
+  CheckCircle,
+  CalendarClock,
+  CheckCircle2,
+  PauseCircle,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -23,6 +27,30 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isValid, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+
+const OBJECTIVE_STATUS_VARIANTS = {
+  in_progress: {
+    label: 'En progreso',
+    badgeClass: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+    icon: TrendingUp,
+  },
+  paused: {
+    label: 'En pausa',
+    badgeClass: 'border-slate-400/40 bg-slate-500/10 text-slate-200',
+    icon: PauseCircle,
+  },
+  completed: {
+    label: 'Completado',
+    badgeClass: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
+    icon: CheckCircle2,
+  },
+};
+
+const OBJECTIVE_STATUS_ORDER = {
+  in_progress: 0,
+  paused: 1,
+  completed: 2,
+};
 
 const UserProfile = () => {
   const { id: userId } = useParams();
@@ -99,6 +127,36 @@ const UserProfile = () => {
     }
   };
 
+  const objectivesRaw = profileData?.objectives ?? [];
+  const objectivesMissing = Boolean(profileData?.objectivesMissing);
+
+  const objectivesSorted = useMemo(() => {
+    return [...objectivesRaw].sort((a, b) => {
+      const statusDiff = (OBJECTIVE_STATUS_ORDER[a?.status] ?? 99) - (OBJECTIVE_STATUS_ORDER[b?.status] ?? 99);
+      if (statusDiff !== 0) return statusDiff;
+
+      if (a?.due_date && b?.due_date) {
+        return new Date(a.due_date) - new Date(b.due_date);
+      }
+      if (a?.due_date) return -1;
+      if (b?.due_date) return 1;
+
+      const aCreated = a?.created_at ? new Date(a.created_at) : new Date(0);
+      const bCreated = b?.created_at ? new Date(b.created_at) : new Date(0);
+      return aCreated - bCreated;
+    });
+  }, [objectivesRaw]);
+
+  const objectiveStats = useMemo(() => {
+    const summary = { total: objectivesRaw.length, active: 0, paused: 0, completed: 0 };
+    objectivesRaw.forEach((obj) => {
+      if (obj.status === 'completed') summary.completed += 1;
+      else if (obj.status === 'paused') summary.paused += 1;
+      else summary.active += 1;
+    });
+    return summary;
+  }, [objectivesRaw]);
+
   if (loading || !profileData) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -146,8 +204,9 @@ const UserProfile = () => {
 
       <motion.div variants={cardVariants} className="mt-6">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Programa Actual</TabsTrigger>
+            <TabsTrigger value="objectives">Objetivos</TabsTrigger>
             <TabsTrigger value="achievements">Logros</TabsTrigger>
             <TabsTrigger value="progress">Historial</TabsTrigger>
             <TabsTrigger value="prs">PRs</TabsTrigger>
@@ -167,6 +226,90 @@ const UserProfile = () => {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8">Este usuario no está inscrito en ningún programa actualmente.</p>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="objectives" className="mt-4">
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2">
+                    <Target className="w-5 h-5 text-primary" />
+                    Objetivos publicados
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {profile.display_name?.split(' ')[0] || 'El usuario'} comparte estas metas para mantenerse enfocado.
+                  </p>
+                </div>
+                {!objectivesMissing && (
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1">
+                      <TrendingUp className="w-3.5 h-3.5" /> {objectiveStats.active} activos
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1">
+                      <PauseCircle className="w-3.5 h-3.5" /> {objectiveStats.paused} en pausa
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> {objectiveStats.completed} completados
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {objectivesMissing ? (
+                <div className="mt-6 rounded-2xl border border-dashed border-border bg-accent/20 px-6 py-10 text-center text-sm text-muted-foreground">
+                  <Target className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+                  Este perfil todavía no tiene la tabla de objetivos configurada.
+                </div>
+              ) : objectivesSorted.length > 0 ? (
+                <div className="grid gap-4 mt-6 md:grid-cols-2 xl:grid-cols-3">
+                  {objectivesSorted.map((objective) => {
+                    const statusMeta = OBJECTIVE_STATUS_VARIANTS[objective.status] || OBJECTIVE_STATUS_VARIANTS.in_progress;
+                    const StatusIcon = statusMeta.icon;
+                    const dueDateLabel = objective.due_date && isValid(new Date(objective.due_date))
+                      ? format(new Date(objective.due_date), 'dd MMM yyyy', { locale: es })
+                      : null;
+                    const updatedLabel = objective.updated_at && isValid(new Date(objective.updated_at))
+                      ? format(new Date(objective.updated_at), 'dd MMM yyyy', { locale: es })
+                      : null;
+
+                    return (
+                      <div key={objective.id} className="flex flex-col gap-4 rounded-2xl border border-border bg-white/[0.02] p-5">
+                        <div>
+                          <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusMeta.badgeClass}`}>
+                            <StatusIcon className="w-3.5 h-3.5" />
+                            {statusMeta.label}
+                          </span>
+                          <h4 className="mt-3 text-lg font-semibold">{objective.title}</h4>
+                          {objective.description && (
+                            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{objective.description}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-2">
+                            <CalendarClock className="w-4 h-4" />
+                            {dueDateLabel ? `Meta para ${dueDateLabel}` : 'Sin fecha objetivo'}
+                          </span>
+                          {updatedLabel && (
+                            <span className="inline-flex items-center gap-2">
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              Actualizado {updatedLabel}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-8 flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border bg-accent/20 px-6 py-12 text-center">
+                  <Target className="w-10 h-10 text-muted-foreground" />
+                  <div>
+                    <p className="text-base font-semibold text-foreground">Sin objetivos publicados por ahora</p>
+                    <p className="mt-2 text-sm text-muted-foreground">Cuando comparta sus metas, aparecerán aquí para inspirar a la comunidad.</p>
+                  </div>
+                </div>
               )}
             </div>
           </TabsContent>
