@@ -235,16 +235,16 @@ const ProgramDetail = ({ onEnrollClick }) => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-4 space-y-6 md:p-6"
+        className="p-3 space-y-4 sm:p-4 sm:space-y-6 md:p-6"
       >
-      <div className="flex items-center gap-4 mb-6">
-        <Link to="/programs">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+      <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:gap-4 sm:mb-6">
+        <Link to="/programs" className="self-start">
+          <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+            <ArrowLeft className="w-3 h-3 mr-1 sm:w-4 sm:h-4 sm:mr-2" />
             Volver
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold gradient-text">{program.name}</h1>
+        <h1 className="text-2xl font-bold leading-tight break-words gradient-text sm:text-3xl lg:text-4xl">{program.name}</h1>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

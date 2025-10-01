@@ -497,6 +497,23 @@ export const addFriend = async (friendId) => {
   }
 };
 
+export const cancelFriendRequest = async (friendId) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+
+  const [user_id_1, user_id_2] = [user.id, friendId].sort();
+
+  const { error } = await supabase
+    .from('friends')
+    .delete()
+    .eq('user_id_1', user_id_1)
+    .eq('user_id_2', user_id_2)
+    .eq('status', 'pending')
+    .eq('action_user_id', user.id);
+
+  if (error) throw error;
+};
+
 export const respondToFriendRequest = async (friendId, accept) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Usuario no autenticado');
@@ -620,32 +637,176 @@ export const getUserAchievementStats = async (userId = null) => {
 
 // Obtener alumnos inscritos activamente a un programa específico (para vista de usuarios regulares)
 export const getProgramEnrolledStudents = async (programId) => {
-  if (!programId) return [];
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  try {
+    if (!programId) {
+      console.log('getProgramEnrolledStudents: No programId provided');
+      return [];
+    }
 
-  const { data, error } = await supabase
-    .from('enrollments')
-    .select(`
-      id,
-      user_id,
-      program_id,
-      profiles:user_id(display_name, photo_url),
-      program:program_id(name)
-    `)
-    .eq('program_id', programId)
-    .eq('status', 'active');
-  if (error) {
+    console.log('getProgramEnrolledStudents: Fetching for program:', programId);
+    
+    // 1. Obtener TODOS los enrollments del programa (incluyendo usuario actual)
+    const { data: enrollments, error: enrollError } = await supabase
+      .from('enrollments')
+      .select('id, user_id, program_id, status')
+      .eq('program_id', programId)
+      .neq('status', 'cancelled');
+
+    if (enrollError) throw enrollError;
+    if (!enrollments || enrollments.length === 0) {
+      console.log('getProgramEnrolledStudents: No enrollments found');
+      return [];
+    }
+
+    console.log('getProgramEnrolledStudents: Found enrollments:', enrollments.length);
+
+    // 2. Obtener perfiles de TODOS los usuarios (sin excluir a nadie)
+    const userIds = [...new Set(enrollments.map(e => e.user_id))];
+    
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, display_name, photo_url')
+      .in('id', userIds);
+
+    if (profilesError) throw profilesError;
+
+    console.log('getProgramEnrolledStudents: Found profiles:', profiles?.length);
+
+    // 3. Obtener nombre del programa
+    const { data: program } = await supabase
+      .from('programs')
+      .select('name')
+      .eq('id', programId)
+      .single();
+
+    // 4. Combinar datos SIN EXCLUIR a nadie
+    const profileMap = new Map(profiles.map(p => [p.id, p]));
+    
+    const result = enrollments
+      .map(enrollment => {
+        const profile = profileMap.get(enrollment.user_id);
+        if (!profile) return null;
+        
+        return {
+          id: profile.id,
+          display_name: profile.display_name || 'Usuario',
+          photo_url: profile.photo_url || null,
+          program_id: enrollment.program_id,
+          program_name: program?.name || 'Programa',
+          enrollment_id: enrollment.id,
+          status: enrollment.status
+        };
+      })
+      .filter(Boolean);
+
+    console.log('getProgramEnrolledStudents: Returning students:', result.length);
+    return result;
+      
+  } catch (error) {
     console.error('Error fetching program enrolled students:', error);
     return [];
   }
-  return (data || [])
-    .filter(e => e.user_id !== user.id) // excluir al propio usuario
-    .map(e => ({
-      id: e.user_id,
-      display_name: e.profiles?.display_name,
-      photo_url: e.profiles?.photo_url,
-      program_id: e.program_id,
-      program_name: e.program?.name
-    }));
+};
+
+// Nueva función: Obtener estudiantes inscritos (opcionalmente filtrados por programa)
+// Usa la misma función RPC que el admin pero sin verificar el rol
+export const getAllEnrolledStudents = async (programId = null) => {
+  try {
+    console.log('getAllEnrolledStudents: Fetching via RPC', programId ? `for program ${programId}` : '(all programs)');
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('getAllEnrolledStudents: No user found');
+      return [];
+    }
+
+    // Si se proporciona programId, hacer consulta directa filtrando por programa
+    if (programId) {
+      console.log('getAllEnrolledStudents: Fetching directly from enrollments for program:', programId);
+      
+      // Obtener enrollments ACTIVOS del programa específico
+      const { data: enrollments, error: enrollError } = await supabase
+        .from('enrollments')
+        .select('user_id, program_id, started_at, status')
+        .eq('program_id', programId)
+        .eq('status', 'active'); // Solo enrollments activos
+
+      if (enrollError) throw enrollError;
+      
+      console.log('getAllEnrolledStudents: Found', enrollments?.length, 'active enrollments');
+      
+      if (!enrollments || enrollments.length === 0) {
+        console.log('getAllEnrolledStudents: No active enrollments found for program');
+        return [];
+      }
+
+      // Obtener perfiles únicos
+      const userIds = [...new Set(enrollments.map(e => e.user_id))];
+      console.log('getAllEnrolledStudents: Unique user IDs:', userIds.length);
+      
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, display_name, photo_url')
+        .in('id', userIds);
+
+      console.log('getAllEnrolledStudents: Found', profiles?.length, 'profiles');
+
+      if (profilesError) throw profilesError;
+
+      // Obtener nombre del programa
+      const { data: program } = await supabase
+        .from('programs')
+        .select('name')
+        .eq('id', programId)
+        .single();
+
+      // Combinar datos
+      const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+      const enrollmentMap = new Map();
+      
+      enrollments.forEach(enrollment => {
+        if (!enrollmentMap.has(enrollment.user_id)) {
+          const profile = profileMap.get(enrollment.user_id);
+          if (profile) {
+            enrollmentMap.set(enrollment.user_id, {
+              id: profile.id,
+              display_name: profile.display_name || 'Usuario',
+              photo_url: profile.photo_url || null,
+              program_id: enrollment.program_id,
+              program_name: program?.name || 'Programa',
+              started_at: enrollment.started_at
+            });
+          }
+        }
+      });
+
+      const result = Array.from(enrollmentMap.values());
+      console.log('getAllEnrolledStudents: Returning', result.length, 'students for program');
+      return result;
+    }
+
+    // Si NO se proporciona programId, usar la función RPC (para admin)
+    const { data, error } = await supabase.rpc('get_enrolled_students', { 
+      p_admin_id: user.id 
+    });
+
+    if (error) {
+      console.error('getAllEnrolledStudents RPC error:', error);
+      throw error;
+    }
+    
+    console.log('getAllEnrolledStudents: RPC returned', data?.length, 'students');
+    
+    // Eliminar duplicados basados en user_id (igual que admin)
+    const uniqueStudents = Array.from(
+      new Map((data || []).map(student => [student.id, student])).values()
+    );
+    
+    console.log('getAllEnrolledStudents: Returning unique students:', uniqueStudents.length);
+    return uniqueStudents;
+      
+  } catch (error) {
+    console.error('Error fetching all enrolled students:', error);
+    return [];
+  }
 };

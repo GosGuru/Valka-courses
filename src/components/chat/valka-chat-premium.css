@@ -1,0 +1,762 @@
+/* ============================================
+   VALKA CHAT PREMIUM - Apple-like Experience
+   ============================================ */
+
+/* === Variables === */
+:root {
+  /* Colores VALKA */
+  --valka-gold: hsl(45, 68%, 53%);
+  --valka-gold-hover: hsl(45, 68%, 48%);
+  --valka-gold-light: hsl(45, 68%, 58%);
+  --valka-purple: hsl(260, 70%, 35%);
+  
+  /* Grises y fondos */
+  --valka-bg-primary: hsl(0, 0%, 4%);
+  --valka-bg-secondary: hsl(0, 0%, 8%);
+  --valka-bg-tertiary: hsl(0, 0%, 12%);
+  --valka-bg-user: hsl(0, 0%, 18%);
+  
+  /* Texto */
+  --valka-text-primary: hsl(0, 0%, 98%);
+  --valka-text-secondary: hsl(0, 0%, 80%);
+  --valka-text-tertiary: hsl(0, 0%, 60%);
+  
+  /* Bordes */
+  --valka-border: hsl(0, 0%, 14%);
+  --valka-border-light: hsl(0, 0%, 20%);
+  
+  /* Sombras sutiles */
+  --valka-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --valka-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --valka-shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
+  
+  /* Transiciones suaves */
+  --valka-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --valka-transition-medium: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --valka-transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Blur Apple-like */
+  --valka-blur-sm: blur(8px);
+  --valka-blur-md: blur(12px);
+  --valka-blur-lg: blur(16px);
+}
+
+/* === Respeto a preferencias de accesibilidad === */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === Container Principal === */
+.valka-chat-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(135deg, 
+    var(--valka-bg-primary) 0%, 
+    var(--valka-bg-secondary) 50%, 
+    var(--valka-bg-primary) 100%);
+  border-radius: 16px;
+  border: 1px solid var(--valka-border);
+  box-shadow: var(--valka-shadow-lg);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Header === */
+.valka-chat-header {
+  padding: 16px 20px;
+  background: var(--valka-bg-primary);
+  border-bottom: 1px solid var(--valka-border);
+  backdrop-filter: var(--valka-blur-md);
+  z-index: 10;
+}
+
+.valka-chat-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.valka-chat-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--valka-gold) 0%, var(--valka-gold-light) 100%);
+  color: var(--valka-bg-primary);
+  box-shadow: 0 2px 8px rgba(184, 147, 78, 0.3);
+}
+
+.valka-chat-header-text {
+  flex: 1;
+}
+
+.valka-chat-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--valka-text-primary);
+  line-height: 1.3;
+}
+
+.valka-chat-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 13px;
+  color: var(--valka-text-tertiary);
+  line-height: 1.4;
+}
+
+/* === Área de Mensajes === */
+.valka-chat-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; /* iOS momentum scroll */
+}
+
+/* Scrollbar personalizada (estilo Apple) */
+.valka-chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.valka-chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.valka-chat-messages::-webkit-scrollbar-thumb {
+  background: var(--valka-border-light);
+  border-radius: 3px;
+  transition: background var(--valka-transition-fast);
+}
+
+.valka-chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--valka-gold);
+}
+
+/* === Starter Chips === */
+.valka-starter-chips-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 24px;
+  animation: fadeIn var(--valka-transition-slow) ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.valka-starter-chips-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.valka-starter-chips-title {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--valka-text-primary);
+  line-height: 1.3;
+}
+
+.valka-starter-chips-subtitle {
+  margin: 0;
+  font-size: 15px;
+  color: var(--valka-text-tertiary);
+  line-height: 1.5;
+}
+
+.valka-starter-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 700px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .valka-starter-chips-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.valka-starter-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--valka-bg-secondary);
+  border: 1px solid var(--valka-border);
+  border-radius: 12px;
+  color: var(--valka-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--valka-transition-fast);
+  box-shadow: var(--valka-shadow-sm);
+}
+
+.valka-starter-chip:hover {
+  background: var(--valka-bg-tertiary);
+  border-color: var(--valka-gold);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(184, 147, 78, 0.2);
+}
+
+.valka-starter-chip:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.valka-starter-chip-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--valka-gold);
+  color: var(--valka-bg-primary);
+  flex-shrink: 0;
+}
+
+.valka-starter-chip-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.valka-starter-chips-footer {
+  max-width: 500px;
+  text-align: center;
+}
+
+.valka-starter-chips-hint {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--valka-bg-secondary);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--valka-text-tertiary);
+  line-height: 1.5;
+}
+
+/* === Message Bubbles === */
+.valka-message-wrapper {
+  display: flex;
+  margin-bottom: 16px;
+  animation: slideInMessage var(--valka-transition-medium) ease-out;
+}
+
+@keyframes slideInMessage {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.valka-message-user-wrapper {
+  justify-content: flex-end;
+}
+
+.valka-message-assistant-wrapper {
+  justify-content: flex-start;
+}
+
+.valka-message-bubble {
+  display: flex;
+  gap: 12px;
+  max-width: 75%;
+  align-items: flex-start;
+}
+
+@media (max-width: 640px) {
+  .valka-message-bubble {
+    max-width: 85%;
+  }
+}
+
+/* Mensaje de usuario */
+.valka-message-user {
+  flex-direction: row-reverse;
+}
+
+.valka-message-user .valka-message-content {
+  background: var(--valka-bg-user);
+  color: var(--valka-text-primary);
+  border-radius: 18px 18px 4px 18px;
+  border: 1px solid var(--valka-border-light);
+}
+
+/* Mensaje del asistente */
+.valka-message-assistant .valka-message-content {
+  background: var(--valka-bg-secondary);
+  color: var(--valka-text-secondary);
+  border-radius: 18px 18px 18px 4px;
+  border: 1px solid var(--valka-border);
+}
+
+/* Avatar */
+.valka-message-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--valka-gold);
+  color: var(--valka-bg-primary);
+  flex-shrink: 0;
+  box-shadow: var(--valka-shadow-sm);
+}
+
+.valka-message-avatar-user {
+  background: var(--valka-bg-tertiary);
+  color: var(--valka-text-secondary);
+  border: 1px solid var(--valka-border);
+}
+
+/* Contenido del mensaje */
+.valka-message-content {
+  padding: 12px 16px;
+  box-shadow: var(--valka-shadow-sm);
+  transition: all var(--valka-transition-fast);
+}
+
+.valka-message-content:hover {
+  box-shadow: var(--valka-shadow-md);
+}
+
+.valka-message-text {
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.valka-message-paragraph {
+  margin: 0 0 10px 0;
+}
+
+.valka-message-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.valka-message-list {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.valka-message-list li {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+/* Estado de envío */
+.valka-message-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--valka-text-tertiary);
+}
+
+.valka-message-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.valka-message-status-sending {
+  background: var(--valka-gold);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.valka-message-status-error {
+  background: hsl(0, 70%, 50%);
+}
+
+.valka-message-status-error-text {
+  color: hsl(0, 70%, 60%);
+}
+
+/* Botón copiar */
+.valka-message-copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: var(--valka-bg-tertiary);
+  border: 1px solid var(--valka-border);
+  border-radius: 6px;
+  color: var(--valka-text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--valka-transition-fast);
+  flex-shrink: 0;
+}
+
+.valka-message-bubble:hover .valka-message-copy-btn {
+  opacity: 1;
+}
+
+.valka-message-copy-btn:hover {
+  background: var(--valka-gold);
+  color: var(--valka-bg-primary);
+  border-color: var(--valka-gold);
+}
+
+.valka-message-copy-btn:active {
+  transform: scale(0.95);
+}
+
+/* === Typing Indicator === */
+.valka-typing-indicator {
+  animation: fadeIn var(--valka-transition-fast) ease-out;
+}
+
+.valka-typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--valka-bg-secondary);
+  border-radius: 18px;
+  border: 1px solid var(--valka-border);
+}
+
+.valka-typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--valka-text-tertiary);
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.valka-typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.valka-typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+/* === Scroll to Bottom Button === */
+.valka-scroll-to-bottom {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--valka-bg-tertiary);
+  backdrop-filter: var(--valka-blur-md);
+  border: 1px solid var(--valka-border-light);
+  border-radius: 20px;
+  color: var(--valka-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--valka-shadow-md);
+  transition: all var(--valka-transition-fast);
+  animation: slideUp var(--valka-transition-medium) ease-out;
+  z-index: 5;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.valka-scroll-to-bottom:hover {
+  background: var(--valka-gold);
+  color: var(--valka-bg-primary);
+  border-color: var(--valka-gold);
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(184, 147, 78, 0.3);
+}
+
+.valka-scroll-to-bottom:active {
+  transform: translateX(-50%) translateY(0);
+}
+
+.valka-scroll-to-bottom-text {
+  line-height: 1;
+}
+
+/* === Input Container === */
+.valka-chat-input-container {
+  padding: 16px 20px 20px;
+  background: var(--valka-bg-primary);
+  border-top: 1px solid var(--valka-border);
+  backdrop-filter: var(--valka-blur-md);
+  z-index: 10;
+}
+
+/* Error banner */
+.valka-chat-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: hsl(0, 70%, 15%);
+  border: 1px solid hsl(0, 70%, 30%);
+  border-radius: 10px;
+  color: hsl(0, 70%, 80%);
+  font-size: 13px;
+  line-height: 1.4;
+  animation: slideInError var(--valka-transition-medium) ease-out;
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.valka-chat-error-retry {
+  padding: 6px 12px;
+  background: hsl(0, 70%, 50%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--valka-transition-fast);
+  white-space: nowrap;
+}
+
+.valka-chat-error-retry:hover {
+  background: hsl(0, 70%, 55%);
+  transform: scale(1.05);
+}
+
+.valka-chat-error-close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: hsl(0, 70%, 80%);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--valka-transition-fast);
+}
+
+.valka-chat-error-close:hover {
+  color: white;
+}
+
+/* Input wrapper */
+.valka-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+/* Textarea */
+.valka-input {
+  flex: 1;
+  min-height: 52px;
+  max-height: 140px;
+  padding: 14px 16px;
+  background: var(--valka-bg-secondary);
+  border: 2px solid var(--valka-border-light);
+  border-radius: 14px;
+  color: var(--valka-text-primary);
+  font-size: 16px; /* Importante: previene zoom en iOS */
+  font-family: inherit;
+  line-height: 1.5;
+  resize: none;
+  overflow-y: auto;
+  transition: all var(--valka-transition-fast);
+  -webkit-appearance: none; /* iOS */
+  appearance: none;
+  box-sizing: border-box;
+}
+
+.valka-input::placeholder {
+  color: var(--valka-text-tertiary);
+}
+
+.valka-input:focus {
+  outline: none;
+  border-color: var(--valka-gold);
+  background: var(--valka-bg-tertiary);
+  box-shadow: 0 0 0 3px rgba(184, 147, 78, 0.2);
+}
+
+.valka-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Scrollbar del textarea */
+.valka-input::-webkit-scrollbar {
+  width: 4px;
+}
+
+.valka-input::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.valka-input::-webkit-scrollbar-thumb {
+  background: var(--valka-border-light);
+  border-radius: 2px;
+}
+
+/* Botón enviar */
+.valka-send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 100px;
+  height: 52px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, var(--valka-gold) 0%, var(--valka-gold-light) 100%);
+  border: none;
+  border-radius: 14px;
+  color: var(--valka-bg-primary);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--valka-transition-fast);
+  box-shadow: 0 2px 8px rgba(184, 147, 78, 0.3);
+}
+
+.valka-send-button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(184, 147, 78, 0.4);
+}
+
+.valka-send-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.valka-send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.valka-send-button-text {
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .valka-send-button {
+    min-width: 52px;
+    padding: 0 16px;
+  }
+  
+  .valka-send-button-text {
+    display: none;
+  }
+}
+
+/* === Responsive === */
+@media (max-width: 640px) {
+  .valka-chat-header {
+    padding: 12px 16px;
+  }
+  
+  .valka-chat-messages {
+    padding: 16px;
+  }
+  
+  .valka-chat-input-container {
+    padding: 12px 16px 16px;
+  }
+  
+  .valka-input {
+    font-size: 16px; /* Crucial para iOS */
+    min-height: 48px;
+  }
+  
+  .valka-send-button {
+    height: 48px;
+  }
+}
+
+/* === Safe Areas (notch/island iOS) === */
+@supports (padding: max(0px)) {
+  .valka-chat-container {
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* === Focus States (Accesibilidad) === */
+.valka-starter-chip:focus-visible,
+.valka-message-copy-btn:focus-visible,
+.valka-scroll-to-bottom:focus-visible,
+.valka-chat-error-retry:focus-visible,
+.valka-input:focus-visible,
+.valka-send-button:focus-visible {
+  outline: 2px solid var(--valka-gold);
+  outline-offset: 2px;
+}

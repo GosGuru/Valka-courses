@@ -12,7 +12,13 @@ export const getEnrolledStudents = async () => {
   const { data, error } = await supabase.rpc('get_enrolled_students', { p_admin_id: user.id });
 
   if (error) throw error;
-  return data;
+  
+  // Eliminar duplicados basados en user_id
+  const uniqueStudents = Array.from(
+    new Map((data || []).map(student => [student.id, student])).values()
+  );
+  
+  return uniqueStudents;
 };
 
 export const adminGetAllPrograms = async () => {

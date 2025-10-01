@@ -29,7 +29,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getUserProfile } from "@/lib/api/user";
 import AdminProgramSessions from "@/pages/admin/AdminProgramSessions";
 import AdminRegistrations from "@/pages/admin/AdminRegistrations";
-import FlowiseChat from "@/pages/FlowiseChat";
+import FlowiseChatPremium from "@/pages/FlowiseChatPremium";
 import PoliticaPrivacidad from "@/pages/PoliticaPrivacidad";
 
 
@@ -94,7 +94,7 @@ const App = () => {
           path="/chat"
           element={
             <Layout isPublic>
-              <FlowiseChat />
+              <FlowiseChatPremium />
             </Layout>
           }
         />
@@ -175,7 +175,7 @@ const App = () => {
         />
         <Route
           path="/chat"
-          element={<FlowiseChat />}
+          element={<FlowiseChatPremium />}
         />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/programs" element={<Programs />} />

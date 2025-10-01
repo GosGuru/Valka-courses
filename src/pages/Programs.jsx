@@ -187,14 +187,14 @@ const Programs = () => {
       animate="visible"
       className="p-4 space-y-6 md:p-6"
     >
-      <motion.div variants={cardVariants} className="mb-8 text-center">
-        <h1 className="mb-2 text-5xl tracking-wider font-logo md:text-6xl text-primary">
+      <motion.div variants={cardVariants} className="px-2 mb-8 text-center">
+        <h1 className="mb-2 text-3xl leading-tight tracking-wider sm:text-4xl md:text-5xl lg:text-6xl font-logo text-primary">
           Programas de Entrenamiento
         </h1>
-        <p className="max-w-3xl mx-auto text-lg text-muted-foreground md:text-xl">
+        <p className="max-w-3xl mx-auto text-base sm:text-lg text-muted-foreground md:text-xl">
           Descubre programas diseñados por expertos para llevarte al siguiente nivel.
         </p>
-        <p className="mt-4 text-sm text-primary">
+        <p className="mt-4 text-xs sm:text-sm text-primary">
           <Link to="/calistenia-durazno" className="underline underline-offset-4 hover:text-primary/80">
             Ver cómo son las clases locales en Durazno →
           </Link>
@@ -202,25 +202,31 @@ const Programs = () => {
       </motion.div>
 
       {session && activeEnrollment && (
-        <motion.div variants={cardVariants} className="p-6 glass-card border-primary/30">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/20">
+        <motion.div variants={cardVariants} className="p-4 glass-card border-primary/30 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-primary/20">
               <CheckCircle className="w-6 h-6 text-primary" />
             </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-primary">Programa Activo</h3>
-              <p className="text-foreground">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-bold sm:text-lg text-primary">Programa Activo</h3>
+              <p className="text-sm break-words sm:text-base text-foreground">
                 Actualmente estás inscrito en: <strong>{activeEnrollment.program.name}</strong>
               </p>
             </div>
-            <Link to="/dashboard">
-              <Button className="bg-primary text-primary-foreground">
-                Ir al Dashboard
+            <div className="flex flex-col w-full gap-2 sm:w-auto sm:flex-row sm:flex-shrink-0">
+              <Link to="/dashboard" className="w-full sm:w-auto">
+                <Button className="w-full text-sm bg-primary text-primary-foreground sm:w-auto sm:text-base whitespace-nowrap">
+                  Ir al Dashboard
+                </Button>
+              </Link>
+              <Button 
+                variant="outline" 
+                onClick={handleOpenUnenrollModal}
+                className="w-full text-sm sm:w-auto sm:text-base whitespace-nowrap"
+              >
+                Salir del programa
               </Button>
-            </Link>
-            <Button variant="outline" onClick={handleOpenUnenrollModal}>
-              Salir del programa
-            </Button>
+            </div>
           </div>
         </motion.div>
       )}
@@ -281,23 +287,23 @@ const Programs = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-4 mt-4 border-t border-border">
+                  <div className="flex flex-col gap-2 pt-4 mt-4 border-t border-border sm:flex-row">
                     <Link to={`/programs/${buildIdSlug(program.id, program.name)}`} className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        <Play className="w-4 h-4 mr-2" />
-                        Ver Detalles
+                      <Button variant="outline" className="w-full text-sm sm:text-base">
+                        <Play className="w-4 h-4 mr-1 sm:mr-2" />
+                        <span className="truncate">Ver Detalles</span>
                       </Button>
                     </Link>
                     
                     {isEnrolledInThis ? (
-                      <Button disabled className="flex-1 text-green-400 bg-green-600/20">
-                        <CheckCircle className="w-4 h-4 mr-2" />
+                      <Button disabled className="flex-1 text-sm sm:text-base text-green-400 bg-green-600/20">
+                        <CheckCircle className="w-4 h-4 mr-1 sm:mr-2" />
                         Inscrito
                       </Button>
                     ) : (
                       <Button 
                         onClick={() => handleOpenEnrollModal(program)}
-                        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                        className="flex-1 text-sm sm:text-base bg-primary text-primary-foreground hover:bg-primary/90"
                         disabled={false}
                       >
                         <Target className="w-4 h-4 mr-2" />
@@ -354,13 +360,13 @@ const Programs = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
-              <div className="flex justify-center gap-2 mb-4">
-                <Button variant="outline" size="sm" onClick={() => setPresetDays(2)}>2 días/sem</Button>
-                <Button variant="outline" size="sm" onClick={() => setPresetDays(3)}>3 días/sem</Button>
-                <Button variant="outline" size="sm" onClick={() => setPresetDays(4)}>4 días/sem</Button>
-                <Button variant="outline" size="sm" onClick={() => setPresetDays(5)}>5+ días/sem</Button>
+              <div className="grid grid-cols-2 gap-2 mb-4 sm:flex sm:flex-wrap sm:justify-center sm:gap-2">
+                <Button variant="outline" size="sm" onClick={() => setPresetDays(2)} className="text-xs px-2 sm:text-sm sm:px-4">2 días/sem</Button>
+                <Button variant="outline" size="sm" onClick={() => setPresetDays(3)} className="text-xs px-2 sm:text-sm sm:px-4">3 días/sem</Button>
+                <Button variant="outline" size="sm" onClick={() => setPresetDays(4)} className="text-xs px-2 sm:text-sm sm:px-4">4 días/sem</Button>
+                <Button variant="outline" size="sm" onClick={() => setPresetDays(5)} className="text-xs px-2 sm:text-sm sm:px-4">5+ días/sem</Button>
               </div>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
                 {weekDays.map(day => (
                   <div key={day.id} className="flex items-center space-x-2">
                     <Checkbox

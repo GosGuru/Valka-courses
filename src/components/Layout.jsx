@@ -21,6 +21,7 @@ import { getUserProfile } from '@/lib/api/user';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import MobileNavBar from './MobileNavBar';
 
 const DesktopSidebar = ({ navItems, adminNavItems, profile, location, handleSignOut, isAdminToolsOpen, setIsAdminToolsOpen }) => (
   <motion.aside 
@@ -172,22 +173,7 @@ const MobileHeader = ({ profile, handleSignOut, adminNavItems }) => (
   </header>
 );
 
-const MobileBottomNav = ({ navItems, location }) => (
-  <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-card/80 backdrop-blur-sm border-t">
-    <div className="grid h-full max-w-lg grid-cols-4 mx-auto">
-      {navItems.map(item => {
-        const Icon = item.icon;
-        const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
-        return (
-          <Link key={item.path} to={item.path} className={`inline-flex flex-col items-center justify-center px-5 group ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
-            <Icon className="w-6 h-6 mb-1" />
-            <span className="text-xs">{item.label}</span>
-          </Link>
-        )
-      })}
-    </div>
-  </nav>
-);
+// MobileBottomNav removido - ahora usamos MobileNavBar
 
 
 const Layout = ({ children, isPublic = false }) => {
@@ -272,7 +258,7 @@ const Layout = ({ children, isPublic = false }) => {
 
       {showSidebar && profile && <MobileHeader profile={profile} handleSignOut={handleSignOut} adminNavItems={adminNavItems}/>}
 
-      <main className={`flex-1 ${showSidebar ? 'lg:p-4 lg:pr-0 pb-16 lg:pb-0' : ''}`}>
+      <main className={`flex-1 ${showSidebar ? 'lg:p-4 lg:pr-0 pb-20 lg:pb-0' : ''}`}>
         <motion.div
           key={location.pathname}
           initial={{ opacity: 0, y: 20 }}
@@ -285,7 +271,7 @@ const Layout = ({ children, isPublic = false }) => {
         </motion.div>
       </main>
 
-      {showSidebar && profile && <MobileBottomNav navItems={navItemsPrivate} location={location} />}
+      {showSidebar && profile && <MobileNavBar profile={profile} />}
     </div>
   );
 };

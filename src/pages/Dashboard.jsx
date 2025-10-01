@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { getActiveEnrollment, getTodaySession, getUserBadges, getUserPRs, getUserProfile, getAllSessionsForProgram, getSessionById, getEnrolledStudents, getProgramEnrolledStudents } from '@/lib/api';
+import { getActiveEnrollment, getTodaySession, getUserBadges, getUserPRs, getUserProfile, getAllSessionsForProgram, getSessionById, getEnrolledStudents, getProgramEnrolledStudents, getAllEnrolledStudents } from '@/lib/api';
 import { supabase } from '@/lib/customSupabaseClient';
 import SessionCompleteModal from '@/components/SessionCompleteModal';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -32,6 +32,68 @@ const Dashboard = () => {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errorState, setErrorState] = useState(false);
+  
+  // Caché para estudiantes
+  const [studentsCache, setStudentsCache] = useState(null);
+  const [lastFetchTime, setLastFetchTime] = useState(0);
+
+  // Función para obtener estudiantes con caché
+  const fetchStudents = useCallback(async (forceRefresh = false) => {
+    const now = Date.now();
+    const CACHE_DURATION = 60000; // 60 segundos
+    
+    // Usar caché si existe y no ha expirado
+    if (!forceRefresh && studentsCache && (now - lastFetchTime < CACHE_DURATION)) {
+      console.log('Using cached students data');
+      setStudents(studentsCache);
+      return studentsCache;
+    }
+    
+    try {
+      let fetchedStudents = [];
+      
+      // Tanto admin como usuarios normales ven TODOS los estudiantes inscritos
+      if (profile?.role === 'admin') {
+        console.log('Fetching all enrolled students (admin with RPC)');
+        fetchedStudents = await getEnrolledStudents();
+      } else {
+        // Usuarios normales también ven TODOS los estudiantes (sin filtrar por programa)
+        console.log('Fetching all enrolled students (public)');
+        fetchedStudents = await getAllEnrolledStudents(); // Sin pasar programId
+      }
+      
+      console.log('Fetched students:', fetchedStudents.length);
+      
+      // Cargar roles de todos los usuarios
+      if (fetchedStudents.length > 0) {
+        const userIds = fetchedStudents.map(s => s.id);
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, role')
+          .in('id', userIds);
+        
+        if (profiles) {
+          // Añadir el rol a cada estudiante
+          fetchedStudents = fetchedStudents.map(student => {
+            const profileData = profiles.find(p => p.id === student.id);
+            return {
+              ...student,
+              role: profileData?.role || 'user'
+            };
+          });
+        }
+      }
+      
+      setStudents(fetchedStudents);
+      setStudentsCache(fetchedStudents);
+      setLastFetchTime(now);
+      return fetchedStudents;
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      setStudents([]);
+      return [];
+    }
+  }, [profile?.role, enrollment?.program_id]);
 
   const loadDashboardData = useCallback(async () => {
     if (!session) {
@@ -49,15 +111,8 @@ const Dashboard = () => {
       const activeEnrollment = await getActiveEnrollment();
       setEnrollment(activeEnrollment);
 
-      if (userProfile?.role === 'admin') {
-        const enrolledStudents = await getEnrolledStudents();
-        setStudents(enrolledStudents);
-      } else if (activeEnrollment) {
-        const sameProgramStudents = await getProgramEnrolledStudents(activeEnrollment.program_id);
-        setStudents(sameProgramStudents);
-      } else {
-        setStudents([]);
-      }
+      // Fetch students después de tener profile y enrollment
+      // Se ejecutará automáticamente por el useEffect de abajo
 
       if (activeEnrollment) {
         const [todaySessionData, allSessionsData, userBadges, userPRs] = await Promise.all([
@@ -113,7 +168,22 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast, session]);
+  }, [toast, session, fetchStudents]);
+
+  // useEffect optimizado con debounce para fetch de estudiantes
+  useEffect(() => {
+    if (!profile && !enrollment) return;
+    
+    // Invalidar caché cuando cambia el enrollment para forzar refresh
+    setStudentsCache(null);
+    setLastFetchTime(0);
+    
+    const timeoutId = setTimeout(() => {
+      fetchStudents(true); // Forzar refresh cuando cambia enrollment
+    }, 100); // Pequeño debounce para evitar llamadas múltiples
+    
+    return () => clearTimeout(timeoutId);
+  }, [enrollment?.id, enrollment?.program_id, profile?.role]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -141,6 +211,12 @@ const Dashboard = () => {
       setShowCompleteModal(true);
     }
   };
+
+  // Memoizar el programa name (DEBE estar antes de cualquier return)
+  const programName = useMemo(() => {
+    if (profile?.role === 'admin') return 'Todos los programas';
+    return enrollment?.program?.name || enrollment?.program_name || 'Mi Programa';
+  }, [profile?.role, enrollment?.program?.name, enrollment?.program_name]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -209,12 +285,12 @@ const Dashboard = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="p-4 space-y-6"
+      className="p-3 space-y-4 sm:p-4 sm:space-y-6"
     >
       <DashboardHeader profile={profile} user={user} />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           {enrollment && <CurrentBlock enrollment={enrollment} />}
           {enrollment && <TodaySession 
             activeSession={activeSession}
@@ -232,14 +308,26 @@ const Dashboard = () => {
           )}
         </div>
 
-        <div className="space-y-6">
-          {profile?.role === 'admin' && students && students.length > 0 && (
-            <EnrolledStudents students={students} isAdmin />
+        <div className="space-y-4 sm:space-y-6">
+          {profile?.role === 'admin' && (
+            <EnrolledStudents 
+              students={students || []} 
+              studentsCount={students?.length || 0}
+              isAdmin 
+              programName={programName}
+              onRefresh={() => fetchStudents(true)}
+            />
           )}
           {profile?.role !== 'admin' && (
             <>
-              {enrollment && students && students.length > 0 && (
-                <EnrolledStudents students={students} programId={enrollment.program_id} isAdmin={false} />
+              {enrollment && (
+                <EnrolledStudents 
+                  students={students || []} 
+                  studentsCount={students?.length || 0}
+                  programName={programName}
+                  isAdmin={false}
+                  onRefresh={() => fetchStudents(true)}
+                />
               )}
               <QuickActions />
               <ValkaAchievements badges={badges} />

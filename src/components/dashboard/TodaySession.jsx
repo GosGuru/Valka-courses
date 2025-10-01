@@ -44,8 +44,8 @@ const TodaySession = ({ activeSession, allSessions, completedSessionIds = [], on
           <p className="mb-4 text-muted-foreground">
             Hoy es tu día de recuperación. Aprovecha para hacer movilidad.
           </p>
-          <Link to="/library">
-            <Button variant="outline">
+          <Link to="/library" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full text-sm sm:w-auto sm:text-base">
               <BookOpen className="w-4 h-4 mr-2" />
               Ver Rutinas de Movilidad
             </Button>
@@ -64,8 +64,8 @@ const TodaySession = ({ activeSession, allSessions, completedSessionIds = [], on
           <p className="mb-4 text-muted-foreground">
             ¡Felicitaciones! Has completado todas las sesiones de este programa.
           </p>
-          <Link to="/programs">
-            <Button>
+          <Link to="/programs" className="w-full sm:w-auto">
+            <Button className="w-full text-sm sm:w-auto sm:text-base">
               Explorar Nuevos Programas
             </Button>
           </Link>
@@ -90,15 +90,16 @@ const TodaySession = ({ activeSession, allSessions, completedSessionIds = [], on
     if (activeSession.exercises) {
       return (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-primary">
+          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-base font-semibold leading-tight sm:text-lg md:text-xl text-primary">
               {activeSession.title}
             </h3>
             {activeSession.video_url && (
-              <a href={activeSession.video_url} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="sm">
-                  <Play className="w-4 h-4 mr-2" />
-                  Video Guía
+              <a href={activeSession.video_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                  <Play className="w-3 h-3 mr-1 sm:w-4 sm:h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Video Guía</span>
+                  <span className="sm:hidden">Video</span>
                 </Button>
               </a>
             )}
@@ -110,15 +111,15 @@ const TodaySession = ({ activeSession, allSessions, completedSessionIds = [], on
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="-mx-4 overflow-x-auto sm:mx-0">
+            <table className="w-full min-w-[600px] text-left text-sm sm:text-base">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="py-2 font-medium text-muted-foreground">Ejercicio</th>
+                  <th className="py-2 pl-4 font-medium sm:pl-0 text-muted-foreground">Ejercicio</th>
                   <th className="py-2 font-medium text-muted-foreground">Series</th>
-                  <th className="py-2 font-medium text-muted-foreground">Repeticiones</th>
+                  <th className="py-2 font-medium text-muted-foreground">Reps</th>
                   <th className="py-2 font-medium text-muted-foreground">Carga</th>
-                  <th className="py-2 font-medium text-muted-foreground">Descanso</th>
+                  <th className="py-2 pr-4 font-medium sm:pr-0 text-muted-foreground">Descanso</th>
                 </tr>
               </thead>
               <tbody>
@@ -146,11 +147,11 @@ const TodaySession = ({ activeSession, allSessions, completedSessionIds = [], on
 
                   return (
                     <tr key={index} className="border-b border-border last:border-b-0">
-                      <td className="py-3 font-medium">{row.name}</td>
+                      <td className="py-3 pl-4 font-medium sm:pl-0">{row.name}</td>
                       <td className="py-3">{series}</td>
                       <td className="py-3">{reps}</td>
                       <td className="py-3">{carga}</td>
-                      <td className="py-3">{descanso}</td>
+                      <td className="py-3 pr-4 sm:pr-0">{descanso}</td>
                     </tr>
                   );
                 })}
@@ -169,15 +170,15 @@ const TodaySession = ({ activeSession, allSessions, completedSessionIds = [], on
   };
   
   return (
-    <motion.div variants={cardVariants} className="p-6 border bg-card border-border rounded-xl">
-      <div className="flex flex-col items-start justify-between gap-4 mb-4 sm:flex-row sm:items-center">
-        <h2 className="flex items-center gap-2 text-2xl font-bold">
-          <Calendar className="w-6 h-6 text-primary" />
-          Mi Sesión de Hoy
+    <motion.div variants={cardVariants} className="p-4 border sm:p-6 bg-card border-border rounded-xl">
+      <div className="flex flex-col items-start justify-between gap-3 mb-4 sm:gap-4 sm:flex-row sm:items-center">
+        <h2 className="flex items-center gap-2 text-xl font-bold leading-tight sm:text-2xl">
+          <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+          <span>Mi Sesión de Hoy</span>
         </h2>
-        <div className="flex items-center w-full gap-4 sm:w-auto">
+        <div className="flex items-center w-full gap-2 sm:gap-4 sm:w-auto">
           <Select onValueChange={onSessionSelect} defaultValue={activeSession?.id}>
-            <SelectTrigger className="w-full sm:w-[220px]">
+            <SelectTrigger className="w-full text-sm sm:text-base sm:w-[220px]">
               <SelectValue placeholder="Elige una sesión" />
             </SelectTrigger>
             <SelectContent className="max-h-[60vh] overflow-y-auto">
@@ -201,8 +202,9 @@ const TodaySession = ({ activeSession, allSessions, completedSessionIds = [], on
           {activeSession && activeSession.exercises && (
             <Button
               onClick={onCompleteSession}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="flex-shrink-0 px-3 text-sm bg-primary hover:bg-primary/90 text-primary-foreground sm:px-4 sm:text-base"
               disabled={activeSession.completed}
+              size="sm"
             >
               {activeSession.completed ? (
                 <CheckCircle className="w-4 h-4" />

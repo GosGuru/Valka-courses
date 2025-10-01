@@ -22,11 +22,13 @@ import {
   searchUsers,
   getFriends,
   addFriend,
+  cancelFriendRequest,
   removeFriend,
   respondToFriendRequest,
   getUserAchievements,
   getUserAchievementStats,
-  getProgramEnrolledStudents
+  getProgramEnrolledStudents,
+  getAllEnrolledStudents
 } from './api/user';
 import { 
   getEnrolledStudents,
@@ -74,12 +76,14 @@ export {
   searchUsers,
   getFriends,
   addFriend,
+  cancelFriendRequest,
   removeFriend,
   respondToFriendRequest,
   getEnrolledStudents,
   getUserAchievements,
   getUserAchievementStats,
   getProgramEnrolledStudents,
+  getAllEnrolledStudents,
   adminGetAllPrograms,
   adminCreateProgram,
   adminUpdateProgram,
