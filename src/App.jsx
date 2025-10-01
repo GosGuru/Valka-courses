@@ -30,6 +30,7 @@ import { getUserProfile } from "@/lib/api/user";
 import AdminProgramSessions from "@/pages/admin/AdminProgramSessions";
 import AdminRegistrations from "@/pages/admin/AdminRegistrations";
 import FlowiseChatPremium from "@/pages/FlowiseChatPremium";
+import FullscreenChat from "@/pages/FullscreenChat";
 import PoliticaPrivacidad from "@/pages/PoliticaPrivacidad";
 
 
@@ -98,6 +99,7 @@ const App = () => {
             </Layout>
           }
         />
+        <Route path="/chat/fullscreen" element={<FullscreenChat />} />
         <Route
           path="/calistenia-durazno"
           element={
@@ -147,7 +149,6 @@ const App = () => {
             </Layout>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       <Dialog
@@ -162,48 +163,56 @@ const App = () => {
   );
 
   const AuthenticatedApp = () => (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route
-          path="/politica-privacidad"
-          element={
-            <Layout isPublic>
-              <PoliticaPrivacidad />
-            </Layout>
-          }
-        />
-        <Route
-          path="/chat"
-          element={<FlowiseChatPremium />}
-        />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/programs" element={<Programs />} />
-  <Route path="/programs/:idSlug" element={<ProgramDetail />} />
-        <Route path="/library" element={<Library />} />
-  <Route path="/library/:idSlug" element={<LessonDetail />} />
-  <Route path="/calistenia-uruguay" element={<CalisteniaUruguay />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/profile/:id" element={<UserProfile />} />
-        <Route path="/profile/edit" element={<EditProfile />} />
-        {profile?.role === "admin" && (
-          <>
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/admin/programs" element={<AdminPrograms />} />
-            <Route
-              path="/admin/programs/:id/sessions"
-              element={<AdminProgramSessions />}
-            />
-            <Route path="/admin/library" element={<AdminLibrary />} />
-            <Route
-              path="/admin/registrations"
-              element={<AdminRegistrations />}
-            />
-          </>
-        )}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Layout>
+    <Routes>
+      {/* Ruta fullscreen SIN Layout (sin navbar ni sidebar) */}
+      <Route path="/chat/fullscreen" element={<FullscreenChat />} />
+      
+      {/* Todas las demás rutas CON Layout */}
+      <Route 
+        path="/*" 
+        element={
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route
+                path="/politica-privacidad"
+                element={
+                  <Layout isPublic>
+                    <PoliticaPrivacidad />
+                  </Layout>
+                }
+              />
+              <Route path="/chat" element={<FlowiseChatPremium />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/programs" element={<Programs />} />
+              <Route path="/programs/:idSlug" element={<ProgramDetail />} />
+              <Route path="/library" element={<Library />} />
+              <Route path="/library/:idSlug" element={<LessonDetail />} />
+              <Route path="/calistenia-uruguay" element={<CalisteniaUruguay />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/:id" element={<UserProfile />} />
+              <Route path="/profile/edit" element={<EditProfile />} />
+              {profile?.role === "admin" && (
+                <>
+                  <Route path="/admin" element={<AdminPanel />} />
+                  <Route path="/admin/programs" element={<AdminPrograms />} />
+                  <Route
+                    path="/admin/programs/:id/sessions"
+                    element={<AdminProgramSessions />}
+                  />
+                  <Route path="/admin/library" element={<AdminLibrary />} />
+                  <Route
+                    path="/admin/registrations"
+                    element={<AdminRegistrations />}
+                  />
+                </>
+              )}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </Layout>
+        }
+      />
+    </Routes>
   );
 
   return (

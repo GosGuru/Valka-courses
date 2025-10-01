@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Sparkles, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles, AlertCircle, Maximize } from 'lucide-react';
 import { useChat, type Message } from './hooks/useChat';
 import { useAutoScroll } from './hooks/useAutoScroll';
 import MessageBubble from './MessageBubble';
@@ -14,18 +15,25 @@ export type { Message };
 interface ValkaChatExperienceProps {
   className?: string;
   showHeader?: boolean;
+  showFullscreenButton?: boolean;
   userContext?: {
+    id?: string;
     name?: string;
     level?: string;
-    goals?: string[];
+    goals?: string;
+    equipment?: string[];
+    time_per_session_min?: number;
+    not_logged?: boolean;
   };
 }
 
 export default function ValkaChatExperience({ 
   className = '', 
   showHeader = true,
+  showFullscreenButton = true,
   userContext 
 }: ValkaChatExperienceProps) {
+  const navigate = useNavigate();
   const {
     messages,
     input,
@@ -106,6 +114,17 @@ export default function ValkaChatExperience({
                 Estoy aquí para guiarte en tu entrenamiento
               </p>
             </div>
+            {/* Botón Fullscreen estilo YouTube */}
+            {showFullscreenButton && (
+              <button
+                onClick={() => navigate('/chat/fullscreen')}
+                className="valka-fullscreen-button"
+                title="Pantalla completa"
+                aria-label="Activar modo pantalla completa"
+              >
+                <Maximize className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
       )}

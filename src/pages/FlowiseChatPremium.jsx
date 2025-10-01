@@ -47,10 +47,10 @@ const PrivacyNotice = ({ className = "" }) => (
 
 const PublicChatShell = () => (
   <section
-    className="relative flex min-h-screen flex-col valka-animated-bg"
+    className="relative flex h-screen flex-col overflow-hidden valka-animated-bg"
     style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0f0f0f 100%)" }}
   >
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-black/50 backdrop-blur-xl">
+    <header className="flex-shrink-0 z-20 border-b border-white/10 bg-black/50 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-3 py-2.5 sm:px-4 md:px-6 lg:py-3">
         <Link
           to="/"
@@ -79,8 +79,8 @@ const PublicChatShell = () => (
       <PrivacyNotice className="border-white/20 bg-black/40 text-white/70 backdrop-blur" />
     </div>
 
-    <div className="flex flex-1 items-center justify-center px-3 py-4 sm:px-4 md:px-6 lg:px-8">
-      <div className="h-[80vh] w-full max-w-5xl">
+    <div className="flex flex-1 overflow-hidden px-3 pb-4 pt-2 sm:px-4 md:px-6 lg:px-8">
+      <div className="w-full max-w-5xl mx-auto flex flex-col">
         <ValkaChatExperience showHeader={true} />
       </div>
     </div>
@@ -90,17 +90,23 @@ const PublicChatShell = () => (
 const AuthenticatedChatShell = () => {
   const { session } = useAuth();
   
-  // Obtener contexto del usuario si está disponible
+  // Obtener contexto del usuario para N8N
   const userContext = session?.user ? {
+    id: session.user.id,
     name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
-    level: session.user.user_metadata?.level,
-    goals: session.user.user_metadata?.goals
-  } : undefined;
+    level: session.user.user_metadata?.level || 'novato',
+    goals: session.user.user_metadata?.goals,
+    equipment: session.user.user_metadata?.equipment || [],
+    time_per_session_min: session.user.user_metadata?.time_per_session || 30,
+    not_logged: false
+  } : {
+    not_logged: true
+  };
 
   return (
-    <section className="min-h-full px-4 pb-16 pt-4 sm:px-6 lg:px-8">
+    <section className="h-full overflow-hidden px-4 pb-4 pt-4 sm:px-6 lg:px-8">
       <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6">
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#171720] via-[#101018] to-[#0d0d14] p-6 shadow-2xl sm:p-8">
+        <div className="flex-shrink-0 rounded-3xl border border-white/10 bg-gradient-to-br from-[#171720] via-[#101018] to-[#0d0d14] p-6 shadow-2xl sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400/80">
@@ -115,8 +121,8 @@ const AuthenticatedChatShell = () => {
           </div>
         </div>
 
-        <div className="grid flex-1 gap-6 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)]">
-          <div className="flex min-h-[60vh] flex-col">
+        <div className="grid flex-1 overflow-hidden gap-6 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)]">
+          <div className="flex flex-col overflow-hidden">
             <ValkaChatExperience 
               showHeader={true} 
               userContext={userContext}

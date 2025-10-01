@@ -67,19 +67,21 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="mt-10"
           >
-            <Button
-              onClick={onRegisterClick}
-              size="lg"
-              className="px-12 py-6 text-lg rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              Únete ahora
-            </Button>
-            <RouterLink to="/chat" className="ml-3 inline-block" aria-label="Abrir chat VALKA">
-              <Button variant="outline" size="lg" className="px-8 py-6 text-lg rounded-full">
-                Probar el Chat
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-4">
+              <Button
+                onClick={onRegisterClick}
+                size="lg"
+                className="w-full sm:w-auto px-12 py-6 text-lg rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Únete ahora
               </Button>
-            </RouterLink>
-            <div className="flex items-center justify-center gap-1 mt-4 text-sm group">
+              <RouterLink to="/chat" className="w-full sm:w-auto" aria-label="Abrir chat VALKA">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto px-8 py-6 text-lg rounded-full">
+                  Probar el Chat
+                </Button>
+              </RouterLink>
+            </div>
+            <div className="flex items-center justify-center gap-1 mt-6 text-sm group">
               <Link
                 to="/calistenia-durazno"
                 className="inline-flex items-center gap-1 transition-colors border-b border-transparent text-primary group-hover:border-primary"

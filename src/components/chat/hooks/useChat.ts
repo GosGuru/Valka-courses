@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { sendMessageToFlowise } from '../../../lib/flowise';
+import { buildN8nPayload } from '../../../lib/n8n';
 
 export interface Message {
   id: string;
@@ -11,11 +11,33 @@ export interface Message {
 
 interface UseChatOptions {
   userContext?: {
+    id?: string;
     name?: string;
     level?: string;
-    goals?: string[];
+    goals?: string;
+    equipment?: string[];
+    time_per_session_min?: number;
+    not_logged?: boolean;
   };
 }
+
+// Generar UUID simple sin dependencias
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+// SessionId persistente por usuario
+let globalSessionId: string | null = null;
+const getSessionId = () => {
+  if (!globalSessionId) {
+    globalSessionId = generateUUID();
+  }
+  return globalSessionId;
+};
 
 export function useChat({ userContext }: UseChatOptions = {}) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -54,44 +76,56 @@ export function useChat({ userContext }: UseChatOptions = {}) {
         )
       );
 
-      // Preparar historial para el contexto
+      // Preparar historial para N8N
       const history = messages.map(m => ({
-        role: m.role,
+        role: m.role as 'user' | 'assistant',
         content: m.content
       }));
 
-      // Agregar contexto de usuario si existe
-      let enhancedMessage = text;
-      if (userContext && messages.length === 0) {
-        const contextParts = [];
-        if (userContext.name) contextParts.push(`Mi nombre es ${userContext.name}`);
-        if (userContext.level) contextParts.push(`mi nivel es ${userContext.level}`);
-        if (userContext.goals && userContext.goals.length > 0) {
-          contextParts.push(`mis objetivos son: ${userContext.goals.join(', ')}`);
+      // Construir payload para N8N
+      const sessionId = getSessionId();
+      const payload = buildN8nPayload(
+        sessionId,
+        text,
+        history,
+        userContext || { not_logged: true },
+        typeof navigator !== 'undefined' ? navigator.userAgent : undefined
+      );
+
+      console.log('[N8N] Enviando:', payload);
+
+      // Enviar a N8N webhook
+      const response = await fetch(
+        'https://n8n-n8n.ua4qkv.easypanel.host/webhook/messageWEB',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
         }
-        if (contextParts.length > 0) {
-          enhancedMessage = `[Contexto: ${contextParts.join(', ')}] ${text}`;
-        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
-      // Enviar a Flowise
-      const response = await sendMessageToFlowise({
-        message: enhancedMessage,
-        history
-      });
+      const data = await response.json();
+      console.log('[N8N] Respuesta:', data);
 
-      // Extraer respuesta
+      // Extraer respuesta del N8N
       const reply = 
-        (response as any)?.text || 
-        (response as any)?.answer || 
-        (response as any)?.message || 
-        (typeof response === 'string' ? response : JSON.stringify(response));
+        data?.output || 
+        data?.message || 
+        data?.response || 
+        data?.text || 
+        'Lo siento, no pude generar una respuesta. ¿Podrías reformular tu pregunta?';
 
       // Crear mensaje del asistente
       const assistantMessage: Message = {
         id: generateId(),
         role: 'assistant',
-        content: reply || 'Lo siento, no pude generar una respuesta. ¿Podrías reformular tu pregunta?',
+        content: reply,
         timestamp: new Date(),
         status: 'sent'
       };

@@ -1,7 +1,7 @@
 import React from "react";
 import { Helmet } from "react-helmet";
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Maximize2 } from "lucide-react";
 import { ValkaChatExperience } from "../components/chat";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 
@@ -52,12 +52,15 @@ const PrivacyNotice = ({ className = "" }) => (
   </div>
 );
 
-const PublicChatShell = () => (
+const PublicChatShell = () => {
+  const navigate = useNavigate();
+
+  return (
   <section
-    className="relative flex min-h-screen flex-col valka-animated-bg"
+    className="relative flex h-screen flex-col overflow-hidden valka-animated-bg"
     style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0f0f0f 100%)" }}
   >
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-black/50 backdrop-blur-xl">
+    <header className="flex-shrink-0 z-20 border-b border-white/10 bg-black/50 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-3 py-2.5 sm:px-4 md:px-6 lg:py-3">
         <Link
           to="/"
@@ -83,19 +86,35 @@ const PublicChatShell = () => (
     </header>
 
     <div className="mx-auto w-full max-w-7xl flex-shrink-0 px-3 pb-2 pt-3 sm:px-4 md:px-6">
-      <PrivacyNotice className="border-white/20 bg-black/40 text-white/70 backdrop-blur" />
+      <div className="flex items-center justify-between gap-4">
+        <PrivacyNotice className="border-white/20 bg-black/40 text-white/70 backdrop-blur flex-1" />
+        
+        {/* Botón Modo Fullscreen */}
+        <button
+          onClick={() => navigate('/chat/fullscreen')}
+          className="group flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-4 py-2 backdrop-blur-xl transition-all duration-300 hover:border-amber-400/60 hover:bg-black/60 hover:shadow-lg hover:shadow-amber-400/20"
+          title="Modo inmersivo"
+        >
+          <Maximize2 className="h-4 w-4 text-white/70 transition-all duration-300 group-hover:scale-110 group-hover:text-amber-400" />
+          <span className="hidden text-sm font-medium text-white/70 transition-colors duration-300 group-hover:text-white sm:inline">
+            Pantalla completa
+          </span>
+        </button>
+      </div>
     </div>
 
-    <div className="flex flex-1 items-center justify-center px-3 py-4 sm:px-4 md:px-6 lg:px-8">
-      <div className="h-[80vh] w-full max-w-5xl">
+    <div className="flex flex-1 overflow-hidden px-3 pb-4 pt-2 sm:px-4 md:px-6 lg:px-8">
+      <div className="w-full max-w-5xl mx-auto flex flex-col">
         <ValkaChatExperience showHeader={true} />
       </div>
     </div>
   </section>
-);
+  );
+};
 
 const AuthenticatedChatShell = () => {
   const { session } = useAuth();
+  const navigate = useNavigate();
   
   // Obtener contexto del usuario si está disponible
   const userContext = session?.user ? {
@@ -105,11 +124,11 @@ const AuthenticatedChatShell = () => {
   } : undefined;
 
   return (
-    <section className="min-h-full px-4 pb-16 pt-4 sm:px-6 lg:px-8">
+    <section className="h-full overflow-hidden px-4 pb-4 pt-4 sm:px-6 lg:px-8">
       <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6">
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#171720] via-[#101018] to-[#0d0d14] p-6 shadow-2xl sm:p-8">
+        <div className="flex-shrink-0 rounded-3xl border border-white/10 bg-gradient-to-br from-[#171720] via-[#101018] to-[#0d0d14] p-6 shadow-2xl sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400/80">
               Asistente inteligente
             </p>
@@ -118,7 +137,21 @@ const AuthenticatedChatShell = () => {
               Resolvé dudas sobre tu entrenamiento, pedí ajustes personalizados en rutinas y conseguí progresiones específicas en tiempo real.
             </p>
           </div>
-          <PrivacyNotice className="mt-2 w-full border-white/15 bg-white/5 text-white/70 backdrop-blur-sm sm:mt-0 sm:max-w-xs" />
+          <div className="flex flex-col gap-3 sm:items-end">
+            <PrivacyNotice className="w-full border-white/15 bg-white/5 text-white/70 backdrop-blur-sm sm:max-w-xs" />
+            
+            {/* Botón Modo Fullscreen */}
+            <button
+              onClick={() => navigate('/chat/fullscreen')}
+              className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 backdrop-blur-sm transition-all duration-300 hover:border-amber-400/60 hover:bg-white/10 hover:shadow-lg hover:shadow-amber-400/20"
+              title="Modo inmersivo"
+            >
+              <Maximize2 className="h-4 w-4 text-white/70 transition-all duration-300 group-hover:scale-110 group-hover:text-amber-400" />
+              <span className="text-sm font-medium text-white/70 transition-colors duration-300 group-hover:text-white">
+                Pantalla completa
+              </span>
+            </button>
+          </div>
         </div>
         <div className="mt-6 flex flex-wrap gap-2">
           {STARTER_PROMPTS.map((prompt) => (
@@ -132,8 +165,8 @@ const AuthenticatedChatShell = () => {
         </div>
       </div>
 
-      <div className="grid flex-1 gap-6 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)]">
-        <div className="flex min-h-[60vh] flex-col">
+      <div className="grid flex-1 overflow-hidden gap-6 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)]">
+        <div className="flex flex-col overflow-hidden">
           <ValkaChatExperience 
             showHeader={true} 
             userContext={userContext}

@@ -56,6 +56,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0; /* Crucial para flex children con overflow */
   width: 100%;
   background: linear-gradient(135deg, 
     var(--valka-bg-primary) 0%, 
@@ -68,6 +69,15 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Modo Fullscreen Mobile (sin bordes ni decoraciones) === */
+@media (max-width: 640px) {
+  .valka-chat-container {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
 }
 
 /* === Header === */
@@ -116,15 +126,62 @@
   line-height: 1.4;
 }
 
+/* === Botón Fullscreen (estilo YouTube) === */
+.valka-fullscreen-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--valka-text-secondary);
+  cursor: pointer;
+  transition: all var(--valka-transition-fast);
+  flex-shrink: 0;
+}
+
+.valka-fullscreen-button:hover {
+  background: var(--valka-bg-tertiary);
+  color: var(--valka-text-primary);
+  transform: scale(1.05);
+}
+
+.valka-fullscreen-button:active {
+  transform: scale(0.95);
+  background: var(--valka-bg-user);
+}
+
+/* Animación sutil del icono al hover */
+.valka-fullscreen-button:hover svg {
+  transform: scale(1.1);
+  transition: transform var(--valka-transition-fast);
+}
+
+/* Mobile - Botón más grande para mejor toque */
+@media (max-width: 640px) {
+  .valka-fullscreen-button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 /* === Área de Mensajes === */
 .valka-chat-messages {
-  flex: 1;
+  flex: 1 1 0%; /* Permite que se encoja y crezca correctamente */
+  min-height: 0; /* Crucial para que funcione el overflow */
   padding: 20px;
+  padding-top: max(20px, env(safe-area-inset-top)); /* Respeta Dynamic Island */
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-behavior: smooth;
-  overscroll-behavior: contain;
+  scroll-behavior: auto; /* Cambiado a 'auto' para mejor control manual */
+  overscroll-behavior: none; /* Evita bounce excesivo en iOS */
   -webkit-overflow-scrolling: touch; /* iOS momentum scroll */
+  /* Mejor manejo de touch en iOS */
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
 }
 
 /* Scrollbar personalizada (estilo Apple) */

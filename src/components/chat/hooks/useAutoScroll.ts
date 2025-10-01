@@ -11,10 +11,11 @@ export function useAutoScroll({
   messagesContainerRef,
   messagesEndRef,
   messageCount,
-  threshold = 150
+  threshold = 200
 }: UseAutoScrollOptions) {
   const [shouldShowScrollButton, setShouldShowScrollButton] = useState(false);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [userHasScrolledUp, setUserHasScrolledUp] = useState(false);
   const lastScrollTopRef = useRef(0);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -25,6 +26,7 @@ export function useAutoScroll({
       block: 'end'
     });
     setShouldShowScrollButton(false);
+    setUserHasScrolledUp(false);
   }, [messagesEndRef]);
 
   // Detectar si el usuario está cerca del fondo
@@ -43,39 +45,50 @@ export function useAutoScroll({
     if (!container) return;
 
     const currentScrollTop = container.scrollTop;
-    const isScrollingDown = currentScrollTop > lastScrollTopRef.current;
+    const isScrollingUp = currentScrollTop < lastScrollTopRef.current;
     lastScrollTopRef.current = currentScrollTop;
 
     // Usuario está haciendo scroll manualmente
     setIsUserScrolling(true);
+    
+    // Si scrollea hacia arriba, marcamos que quiere ver mensajes antiguos
+    if (isScrollingUp) {
+      setUserHasScrolledUp(true);
+    }
 
     // Actualizar visibilidad del botón
     const nearBottom = isNearBottom();
     setShouldShowScrollButton(!nearBottom);
+    
+    // Si llegó al fondo manualmente, resetear flag
+    if (nearBottom) {
+      setUserHasScrolledUp(false);
+    }
 
-    // Reset del flag después de un tiempo
+    // Reset del flag después de un tiempo más largo para iOS
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
     scrollTimeoutRef.current = setTimeout(() => {
       setIsUserScrolling(false);
-    }, 150);
+    }, 300);
   }, [isNearBottom, messagesContainerRef]);
 
   // Auto-scroll cuando llegan nuevos mensajes
   useEffect(() => {
-    // Si el usuario no está haciendo scroll y está cerca del fondo, auto-scroll
-    if (!isUserScrolling || isNearBottom()) {
-      // Pequeño delay para que el DOM se actualice
+    // Solo auto-scroll si el usuario NO ha scrolleado hacia arriba intencionalmente
+    // y está cerca del fondo
+    if (!userHasScrolledUp && (!isUserScrolling || isNearBottom())) {
+      // Delay más largo para iOS para evitar conflictos con momentum scroll
       const timer = setTimeout(() => {
         scrollToBottom(true);
-      }, 100);
+      }, 150);
       return () => clearTimeout(timer);
-    } else {
-      // Si está lejos del fondo, mostrar botón
+    } else if (userHasScrolledUp) {
+      // Si está lejos del fondo intencionalmente, mostrar botón
       setShouldShowScrollButton(true);
     }
-  }, [messageCount, isUserScrolling, isNearBottom, scrollToBottom]);
+  }, [messageCount, isUserScrolling, userHasScrolledUp, isNearBottom, scrollToBottom]);
 
   // Scroll inicial (sin animación)
   useEffect(() => {

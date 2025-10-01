@@ -1,12 +1,21 @@
 /// <reference types="vite/client" />
 export type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
+// Configuración flexible para Flowise o N8N
+const USE_N8N = import.meta.env.VITE_USE_N8N === 'true';
+const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL as string | undefined;
+
 const FLOWISE_BASE_URL = import.meta.env.VITE_FLOWISE_BASE_URL as string | undefined || 'https://cloud.flowiseai.com';
 const FLOWISE_CHATFLOW_ID = import.meta.env.VITE_FLOWISE_CHATFLOW_ID as string | undefined || 'e7d9faeb-a60d-41aa-a12c-1028daba491a';
 const FLOWISE_API_KEY = import.meta.env.VITE_FLOWISE_API_KEY as string | undefined || 'QCeH1c7cuYu1vKHdtvsWsHEdH7kvpMjZIIw9Iqb4YmE';
 const VITE_USE_PROXY = (import.meta.env.VITE_USE_PROXY as string | undefined)?.toLowerCase() === 'true';
 
 function getRestEndpoint() {
+  // Si usamos N8N, retornar el webhook URL
+  if (USE_N8N && N8N_WEBHOOK_URL) {
+    return N8N_WEBHOOK_URL;
+  }
+  
   if (VITE_USE_PROXY) return '/api/chat/flowise';
   // Usar valores hardcodeados si no están en el entorno
   const flowiseUrl = FLOWISE_BASE_URL || 'https://cloud.flowiseai.com';
@@ -23,16 +32,43 @@ export async function sendMessageToFlowise({
 }) {
   const endpoint = getRestEndpoint();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (!VITE_USE_PROXY && FLOWISE_API_KEY) headers.Authorization = `Bearer ${FLOWISE_API_KEY}`;
+  
+  // Preparar el body según el backend
+  let body: string;
+  if (USE_N8N) {
+    // Formato para N8N - ajustar según tu workflow
+    body = JSON.stringify({ 
+      message: message,
+      chatHistory: history,
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    // Formato para Flowise
+    if (!VITE_USE_PROXY && FLOWISE_API_KEY) headers.Authorization = `Bearer ${FLOWISE_API_KEY}`;
+    body = JSON.stringify({ question: message, history });
+  }
 
-  const body = JSON.stringify({ question: message, history });
   const res = await fetch(endpoint, { method: 'POST', headers, body });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(text || `Flowise HTTP ${res.status}`);
+    throw new Error(text || `Chat API HTTP ${res.status}`);
   }
+  
   const contentType = res.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) return res.json();
+  if (contentType.includes('application/json')) {
+    const data = await res.json();
+    
+    // Normalizar respuesta de N8N si es necesario
+    if (USE_N8N) {
+      // Ajustar según la estructura de respuesta de tu N8N
+      return {
+        text: data.response || data.message || data.text || JSON.stringify(data)
+      };
+    }
+    
+    return data;
+  }
+  
   const txt = await res.text();
   return { text: txt };
 }
