@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Target, Brain, Users, Flame, Compass } from "lucide-react";
+import { ArrowRight, Target, Brain, Users, Flame, Compass, BookOpen } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 
 // Helper WhatsApp (faltaba en este archivo)
@@ -67,26 +67,35 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="mt-10"
           >
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-4">
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-4">
               <Button
                 onClick={onRegisterClick}
                 size="lg"
-                className="w-full sm:w-auto px-12 py-6 text-lg rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                className="w-full px-12 py-6 text-lg rounded-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 Únete ahora
               </Button>
-              <RouterLink to="/chat" className="w-full sm:w-auto" aria-label="Abrir chat VALKA">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto px-8 py-6 text-lg rounded-full">
-                  Probar el Chat
+              <RouterLink to="/library" className="w-full sm:w-auto" aria-label="Explorar Biblioteca VALKA">
+                <Button variant="outline" size="lg" className="w-full px-8 py-6 text-lg rounded-full sm:w-auto">
+                  <BookOpen className="w-5 h-5 mr-2" />
+                  Biblioteca
                 </Button>
               </RouterLink>
             </div>
-            <div className="flex items-center justify-center gap-1 mt-6 text-sm group">
+            <div className="flex flex-col items-center justify-center gap-4 mt-6 text-sm sm:flex-row">
+              <RouterLink 
+                to="/chat" 
+                className="inline-flex items-center gap-1 transition-colors border-b border-transparent text-primary hover:border-primary group"
+              >
+                Probar el Chat AI
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </RouterLink>
+              <span className="hidden sm:inline text-muted-foreground">•</span>
               <Link
                 to="/calistenia-durazno"
-                className="inline-flex items-center gap-1 transition-colors border-b border-transparent text-primary group-hover:border-primary"
+                className="inline-flex items-center gap-1 transition-colors border-b border-transparent text-primary hover:border-primary group"
               >
-                Conocé cómo entrenamos en Durazno
+                Entrenamos en Durazno
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
@@ -242,7 +251,7 @@ const LandingPage = ({ onLoginClick, onRegisterClick }) => {
           {faq.map(item => (
             <div key={item.q} className="p-4 border rounded-lg bg-card/40 border-border/60">
               <h3 className="mb-1 text-base font-semibold">{item.q}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{item.a}</p>
             </div>
           ))}
         </div>

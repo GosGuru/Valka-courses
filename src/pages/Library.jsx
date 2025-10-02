@@ -1,15 +1,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { BookOpen, ChevronRight } from 'lucide-react';
+import { Link, Link as RouterLink } from 'react-router-dom';
+import { BookOpen, ChevronRight, Sparkles, Target, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getLessonCategoriesWithLessons } from '@/lib/api';
 import { buildIdSlug } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 
 const Library = () => {
   const { toast } = useToast();
+  const { session } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,20 +52,99 @@ const Library = () => {
   };
 
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="p-4 space-y-8 md:p-6"
-    >
-      <motion.div variants={categoryVariants} className="text-center">
-        <h1 className="mb-2 text-5xl tracking-wider font-logo md:text-6xl text-primary">
-          Biblioteca Educativa
-        </h1>
-        <p className="max-w-3xl mx-auto text-lg text-muted-foreground md:text-xl">
-          El conocimiento es poder. Aquí tenés todo lo que necesitás para entender el porqué de tu entrenamiento.
-        </p>
-      </motion.div>
+    <>
+      <Helmet>
+        <title>Biblioteca de Calistenia | Guías y Tutoriales - VALKA</title>
+        <meta 
+          name="description" 
+          content="Aprende calistenia desde cero con guías completas: dominadas, muscle-up, handstand, progresiones, técnica y planificación inteligente. Contenido gratuito de VALKA Uruguay." 
+        />
+        <meta name="keywords" content="calistenia, tutoriales calistenia, como hacer dominadas, muscle up tutorial, handstand progresion, entrenamiento calistenia, guia calistenia uruguay" />
+        <link rel="canonical" href="https://entrenaconvalka.com/library" />
+        
+        <meta property="og:title" content="Biblioteca de Calistenia | VALKA" />
+        <meta property="og:description" content="Guías completas de calistenia: progresiones, técnica, planificación. Aprende de forma inteligente con VALKA." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://entrenaconvalka.com/library" />
+      </Helmet>
+
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="p-4 space-y-8 md:p-6"
+      >
+        <motion.div variants={categoryVariants} className="text-center space-y-4">
+          <h1 className="mb-2 text-5xl tracking-wider font-logo md:text-6xl text-primary">
+            Biblioteca Educativa
+          </h1>
+          <p className="max-w-3xl mx-auto text-lg text-muted-foreground md:text-xl">
+            El conocimiento es poder. Aquí tenés todo lo que necesitás para entender el porqué de tu entrenamiento.
+          </p>
+          
+          <div className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-full bg-primary/10 border-primary/20 text-primary">
+            <Sparkles className="w-4 h-4" />
+            Acceso 100% gratuito - Sin registro necesario
+          </div>
+        </motion.div>
+
+        {!session && (
+          <motion.div 
+            variants={categoryVariants}
+            className="max-w-5xl mx-auto p-8 md:p-10 border rounded-3xl bg-gradient-to-br from-[#2a2a2a] via-[#1f1f1f] to-[#1a1a1a] border-primary/30 shadow-2xl"
+          >
+            <div className="grid gap-8 md:grid-cols-3 mb-8">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-primary/20 ring-1 ring-primary/30">
+                  <Target className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold mb-2 text-foreground uppercase tracking-wide">Progresiones Adaptativas</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Registrate para recibir rutinas personalizadas según tu nivel
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-primary/20 ring-1 ring-primary/30">
+                  <TrendingUp className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold mb-2 text-foreground uppercase tracking-wide">Seguimiento de Progreso</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Trackea cada sesión y visualiza tu evolución en tiempo real
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-primary/20 ring-1 ring-primary/30">
+                  <BookOpen className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold mb-2 text-foreground uppercase tracking-wide">Chat AI 24/7</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Resuelve dudas específicas sobre tu entrenamiento al instante
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-border/30">
+              <RouterLink to="/" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full px-8 py-6 text-base font-semibold">
+                  Crear cuenta gratis
+                </Button>
+              </RouterLink>
+              <RouterLink to="/chat" className="w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="w-full px-8 py-6 text-base font-semibold border-primary/30 hover:bg-primary/10">
+                  Probar Chat AI
+                </Button>
+              </RouterLink>
+            </div>
+          </motion.div>
+        )}
 
       {loading ? (
         <div className="flex justify-center py-20">
@@ -132,9 +214,8 @@ const Library = () => {
           </p>
         </motion.div>
       )}
-
-  
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 
