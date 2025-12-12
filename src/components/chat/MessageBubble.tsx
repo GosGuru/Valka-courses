@@ -29,45 +29,66 @@ export default function MessageBubble({ message, isLatest }: MessageBubbleProps)
   };
 
   const formatContent = (content: string) => {
-    // Convertir saltos de línea a <br>
-    // Detectar listas
+    // Función helper para aplicar markdown básico
+    const applyMarkdown = (text: string) => {
+      return text
+        // Negritas: **texto** o __texto__
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+        // Cursivas: *texto* o _texto_
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/_([^_]+)_/g, '<em>$1</em>')
+        // Código inline: `texto`
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+    };
+
+    // Convertir saltos de línea a <br> y detectar listas
     const lines = content.split('\n');
     let html = '';
     let inList = false;
+    let listType = '';
 
     for (const line of lines) {
       const trimmed = line.trim();
       
       // Lista desordenada
       if (trimmed.match(/^[-•*]\s/)) {
-        if (!inList) {
+        if (!inList || listType !== 'ul') {
+          if (inList) html += `</${listType}>`;
           html += '<ul class="valka-message-list">';
           inList = true;
+          listType = 'ul';
         }
-        html += `<li>${trimmed.replace(/^[-•*]\s/, '')}</li>`;
+        const itemText = applyMarkdown(trimmed.replace(/^[-•*]\s/, ''));
+        html += `<li>${itemText}</li>`;
       } 
       // Lista ordenada
       else if (trimmed.match(/^\d+\.\s/)) {
-        if (!inList) {
+        if (!inList || listType !== 'ol') {
+          if (inList) html += `</${listType}>`;
           html += '<ol class="valka-message-list">';
           inList = true;
+          listType = 'ol';
         }
-        html += `<li>${trimmed.replace(/^\d+\.\s/, '')}</li>`;
+        const itemText = applyMarkdown(trimmed.replace(/^\d+\.\s/, ''));
+        html += `<li>${itemText}</li>`;
       } 
       // Texto normal
       else {
         if (inList) {
-          html += inList ? '</ul>' : '</ol>';
+          html += `</${listType}>`;
           inList = false;
+          listType = '';
         }
         if (trimmed) {
-          html += `<p class="valka-message-paragraph">${trimmed}</p>`;
+          const formattedText = applyMarkdown(trimmed);
+          html += `<p class="valka-message-paragraph">${formattedText}</p>`;
         }
       }
     }
 
     if (inList) {
-      html += '</ul>';
+      html += `</${listType}>`;
     }
 
     return html;
@@ -88,10 +109,19 @@ export default function MessageBubble({ message, isLatest }: MessageBubbleProps)
 
         {/* Contenido */}
         <div className="valka-message-content">
-          <div 
-            className="valka-message-text"
-            dangerouslySetInnerHTML={{ __html: formatContent(message.content) }}
-          />
+          {/* Mostrar contenido si existe */}
+          {message.content && (
+            <>
+              <div 
+                className="valka-message-text"
+                dangerouslySetInnerHTML={{ __html: formatContent(message.content) }}
+              />
+              {/* Cursor parpadeante solo cuando está recibiendo más contenido */}
+              {!isUser && message.status === 'sending' && (
+                <span className="valka-streaming-cursor">▋</span>
+              )}
+            </>
+          )}
 
           {/* Estado de envío para mensajes de usuario */}
           {isUser && message.status === 'sending' && (

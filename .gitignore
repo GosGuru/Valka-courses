@@ -1,1 +1,17 @@
 node_modules
+
+# Environment files (no commitear secrets)
+.env
+.env.local
+.env.production.local
+.env.development.local
+
+# Build output
+dist
+dist-ssr
+*.local
+
+# Cache
+.vite
+.cache
+

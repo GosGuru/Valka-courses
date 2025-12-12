@@ -5,7 +5,15 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { Helmet, HelmetProvider } from "react-helmet-async";
+
+// Router configuration with future flags to suppress warnings
+const routerConfig = {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  },
+};
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import Dashboard from "@/pages/Dashboard";
 import Programs from "@/pages/Programs";
@@ -25,7 +33,8 @@ import CalisteniaDurazno from "@/pages/CalisteniaDurazno";
 import CalisteniaUruguay from "@/pages/CalisteniaUruguay";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { getUserProfile } from "@/lib/api/user";
 import AdminProgramSessions from "@/pages/admin/AdminProgramSessions";
 import AdminRegistrations from "@/pages/admin/AdminRegistrations";
@@ -156,6 +165,14 @@ const App = () => {
         onOpenChange={(isOpen) => !isOpen && closeAuthModal()}
       >
         <DialogContent className="fixed max-w-xs max-h-full p-0 force-center top-1/2 left-1/2">
+          <VisuallyHidden>
+            <DialogTitle>{authMode === 'login' ? 'Iniciar Sesión' : 'Registrarse'}</DialogTitle>
+            <DialogDescription>
+              {authMode === 'login' 
+                ? 'Ingresa tus credenciales para acceder a tu cuenta' 
+                : 'Crea una cuenta nueva para comenzar tu entrenamiento'}
+            </DialogDescription>
+          </VisuallyHidden>
           <AuthPage initialMode={authMode} onAuthSuccess={closeAuthModal} />
         </DialogContent>
       </Dialog>
@@ -216,7 +233,7 @@ const App = () => {
   );
 
   return (
-    <>
+    <HelmetProvider>
       <Helmet>
         <title>VALKA - Entrenamiento Inteligente</title>
         <meta
@@ -231,13 +248,13 @@ const App = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Helmet>
 
-      <Router>
+      <Router {...routerConfig}>
         <AnimatePresence mode="wait">
           {session ? <AuthenticatedApp /> : <UnauthenticatedApp />}
         </AnimatePresence>
       </Router>
       <Toaster />
-    </>
+    </HelmetProvider>
   );
 };
 

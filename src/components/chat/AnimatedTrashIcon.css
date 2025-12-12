@@ -1,0 +1,110 @@
+/* ============================================
+   ANIMATED TRASH ICON
+   ============================================ */
+
+.animated-trash-icon {
+  stroke: currentColor;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  overflow: visible;
+}
+
+/* Cuerpo de la basura */
+.trash-body {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Líneas internas - Se desvanecen al hacer hover */
+.trash-lines {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.animated-trash-icon:hover .trash-lines,
+.animated-trash-icon.active .trash-lines {
+  opacity: 0.3;
+}
+
+/* Tapa - Animación de apertura */
+.trash-lid {
+  transform-origin: left center;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  stroke-width: 2;
+}
+
+/* Hover - La tapa se abre ligeramente */
+.animated-trash-icon:hover .trash-lid {
+  transform: translateY(-2px) rotate(-10deg);
+  stroke: #ff3b30;
+}
+
+/* Active - La tapa se abre más y todo se pone rojo */
+.animated-trash-icon.active .trash-lid {
+  transform: translateY(-4px) rotate(-25deg);
+  stroke: #ff3b30;
+  animation: lidShake 0.4s ease;
+}
+
+.animated-trash-icon.active .trash-body {
+  stroke: #ff3b30;
+}
+
+/* Animación de shake para la tapa */
+@keyframes lidShake {
+  0%, 100% {
+    transform: translateY(-4px) rotate(-25deg);
+  }
+  25% {
+    transform: translateY(-5px) rotate(-30deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(-20deg);
+  }
+}
+
+/* Hover sobre todo el icono - Escala suave */
+.animated-trash-icon:hover {
+  transform: scale(1.1);
+}
+
+.animated-trash-icon:active {
+  transform: scale(0.95);
+}
+
+/* Animación de "temblor" al estar activo */
+.animated-trash-icon.active {
+  animation: trashShake 0.5s ease;
+}
+
+@keyframes trashShake {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(-5deg) scale(1.05);
+  }
+  75% {
+    transform: rotate(5deg) scale(1.05);
+  }
+}
+
+/* Efecto de "papel arrugándose" dentro de la basura */
+.animated-trash-icon.active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 59, 48, 0.2) 0%, transparent 70%);
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}

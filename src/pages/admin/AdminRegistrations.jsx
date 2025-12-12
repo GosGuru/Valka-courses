@@ -149,32 +149,40 @@ const AdminRegistrations = () => {
           <TabsTrigger value="enrollments">Inscripciones a Programas</TabsTrigger>
           <TabsTrigger value="progress">Sesiones Completadas</TabsTrigger>
         </TabsList>
-        <AnimatePresence mode="wait">
-          <TabsContent value="enrollments" asChild>
-            <MotionDiv
-              key="enrollments"
-              variants={TabContentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="mt-4"
-            >
-              {renderEnrollments()}
-            </MotionDiv>
-          </TabsContent>
-          <TabsContent value="progress" asChild>
-            <MotionDiv
-              key="progress"
-              variants={TabContentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="mt-4"
-            >
-              {renderProgress()}
-            </MotionDiv>
-          </TabsContent>
-        </AnimatePresence>
+        
+        <TabsContent value="enrollments">
+          <AnimatePresence mode="wait">
+            {activeTab === "enrollments" && (
+              <MotionDiv
+                key="enrollments"
+                variants={TabContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="mt-4"
+              >
+                {renderEnrollments()}
+              </MotionDiv>
+            )}
+          </AnimatePresence>
+        </TabsContent>
+        
+        <TabsContent value="progress">
+          <AnimatePresence mode="wait">
+            {activeTab === "progress" && (
+              <MotionDiv
+                key="progress"
+                variants={TabContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="mt-4"
+              >
+                {renderProgress()}
+              </MotionDiv>
+            )}
+          </AnimatePresence>
+        </TabsContent>
       </Tabs>
     </div>
   );

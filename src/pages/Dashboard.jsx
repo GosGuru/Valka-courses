@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { getActiveEnrollment, getTodaySession, getUserBadges, getUserPRs, getUserProfile, getAllSessionsForProgram, getSessionById, getEnrolledStudents, getProgramEnrolledStudents, getAllEnrolledStudents } from '@/lib/api';
+import { getActiveEnrollment, getTodaySession, getUserBadges, getUserPRs, getUserProfile, getAllSessionsForProgram, getSessionById, getEnrolledStudents, getAllEnrolledStudents } from '@/lib/api';
 import { supabase } from '@/lib/customSupabaseClient';
 import SessionCompleteModal from '@/components/SessionCompleteModal';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -21,6 +21,8 @@ import EnrolledStudents from '@/components/dashboard/EnrolledStudents';
 const Dashboard = () => {
   const { toast } = useToast();
   const { user, session, loading: authLoading } = useAuth();
+  
+  // Estados principales
   const [profile, setProfile] = useState(null);
   const [enrollment, setEnrollment] = useState(null);
   const [activeSession, setActiveSession] = useState(null);
@@ -33,132 +35,188 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [errorState, setErrorState] = useState(false);
   
-  // Caché para estudiantes
-  const [studentsCache, setStudentsCache] = useState(null);
-  const [lastFetchTime, setLastFetchTime] = useState(0);
+  // useRef para prevenir doble carga y mantener caché estable
+  const hasLoadedRef = useRef(false);
+  const isLoadingRef = useRef(false);
+  const studentsCacheRef = useRef({ data: null, timestamp: 0, enrollmentId: null });
+  const abortControllerRef = useRef(null);
 
-  // Función para obtener estudiantes con caché
+  // Constantes
+  const CACHE_DURATION = 60000; // 60 segundos
+
+  /**
+   * OPTIMIZACIÓN 1: Fetch de estudiantes con caché mejorado
+   * - Usa useRef para cache estable
+   * - Valida timestamp correctamente
+   * - Cancela requests pendientes
+   */
   const fetchStudents = useCallback(async (forceRefresh = false) => {
     const now = Date.now();
-    const CACHE_DURATION = 60000; // 60 segundos
+    const cache = studentsCacheRef.current;
     
-    // Usar caché si existe y no ha expirado
-    if (!forceRefresh && studentsCache && (now - lastFetchTime < CACHE_DURATION)) {
-      console.log('Using cached students data');
-      setStudents(studentsCache);
-      return studentsCache;
+    // Usar caché si es válido
+    if (
+      !forceRefresh &&
+      cache.data &&
+      cache.enrollmentId === enrollment?.id &&
+      (now - cache.timestamp < CACHE_DURATION)
+    ) {
+      setStudents(cache.data);
+      return cache.data;
     }
-    
+
+    // Cancelar request anterior si existe
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     try {
       let fetchedStudents = [];
       
-      // Tanto admin como usuarios normales ven TODOS los estudiantes inscritos
       if (profile?.role === 'admin') {
-        console.log('Fetching all enrolled students (admin with RPC)');
         fetchedStudents = await getEnrolledStudents();
       } else {
-        // Usuarios normales también ven TODOS los estudiantes (sin filtrar por programa)
-        console.log('Fetching all enrolled students (public)');
-        fetchedStudents = await getAllEnrolledStudents(); // Sin pasar programId
+        fetchedStudents = await getAllEnrolledStudents();
       }
       
-      console.log('Fetched students:', fetchedStudents.length);
-      
-      // Cargar roles de todos los usuarios
+      // Cargar roles en paralelo si hay estudiantes
       if (fetchedStudents.length > 0) {
         const userIds = fetchedStudents.map(s => s.id);
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, role')
-          .in('id', userIds);
+          .in('id', userIds)
+          .abortSignal(abortControllerRef.current.signal);
         
         if (profiles) {
-          // Añadir el rol a cada estudiante
-          fetchedStudents = fetchedStudents.map(student => {
-            const profileData = profiles.find(p => p.id === student.id);
-            return {
-              ...student,
-              role: profileData?.role || 'user'
-            };
-          });
+          fetchedStudents = fetchedStudents.map(student => ({
+            ...student,
+            role: profiles.find(p => p.id === student.id)?.role || 'user'
+          }));
         }
       }
       
+      // Actualizar caché
+      studentsCacheRef.current = {
+        data: fetchedStudents,
+        timestamp: now,
+        enrollmentId: enrollment?.id
+      };
+      
       setStudents(fetchedStudents);
-      setStudentsCache(fetchedStudents);
-      setLastFetchTime(now);
       return fetchedStudents;
     } catch (error) {
-      console.error('Error fetching students:', error);
+      if (error.name === 'AbortError') {
+        return [];
+      }
+      if (import.meta.env.DEV) {
+        console.error('Error fetching students:', error);
+      }
       setStudents([]);
       return [];
     }
-  }, [profile?.role, enrollment?.program_id]);
+  }, [profile?.role, enrollment?.id]);
 
+  /**
+   * OPTIMIZACIÓN 2: Carga de datos consolidada
+   * - Una sola función para cargar todo
+   * - Usa Promise.allSettled para no fallar si una request falla
+   * - Actualiza múltiples estados en batch
+   */
   const loadDashboardData = useCallback(async () => {
-    if (!session) {
-      setLoading(false);
+    // Guard: prevenir doble carga
+    if (isLoadingRef.current) {
       return;
     }
 
+    isLoadingRef.current = true;
     setLoading(true);
     setErrorState(false);
 
     try {
-      const userProfile = await getUserProfile();
-      setProfile(userProfile);
+      
+      // Fase 1: Cargar perfil y enrollment (críticos)
+      const [userProfile, activeEnrollment] = await Promise.all([
+        getUserProfile(),
+        getActiveEnrollment()
+      ]);
 
-      const activeEnrollment = await getActiveEnrollment();
+      // Actualizar estados críticos en batch
+      setProfile(userProfile);
       setEnrollment(activeEnrollment);
 
-      // Fetch students después de tener profile y enrollment
-      // Se ejecutará automáticamente por el useEffect de abajo
-
+      // Fase 2: Si hay enrollment, cargar datos del programa
       if (activeEnrollment) {
-        const [todaySessionData, allSessionsData, userBadges, userPRs] = await Promise.all([
+        const results = await Promise.allSettled([
           getTodaySession(activeEnrollment),
           getAllSessionsForProgram(activeEnrollment.program_id),
           getUserBadges(),
           getUserPRs(),
+          supabase
+            .from('session_progress')
+            .select('session_id, completed_at')
+            .eq('enrollment_id', activeEnrollment.id)
+            .eq('completed', true)
+            .gte('completed_at', activeEnrollment.started_at)
         ]);
 
-        // Obtener sesiones completadas para esta inscripción (solo del attempt actual: completed_at >= started_at)
-        const { data: completedRows } = await supabase
-          .from('session_progress')
-          .select('session_id, completed_at')
-          .eq('enrollment_id', activeEnrollment.id)
-          .eq('completed', true)
-          .gte('completed_at', activeEnrollment.started_at);
-        const completedIds = (completedRows || []).map(r => r.session_id);
-        setCompletedSessionIds(completedIds);
+        // Procesar resultados de forma segura
+        const [
+          todaySessionResult,
+          allSessionsResult,
+          badgesResult,
+          prsResult,
+          completedResult
+        ] = results;
 
-        setAllProgramSessions(allSessionsData);
-        setBadges(userBadges.slice(0, 4));
-        setPRs(userPRs.slice(0, 5));
+        // Actualizar sesiones completadas
+        if (completedResult.status === 'fulfilled') {
+          const completedIds = (completedResult.value?.data || []).map(r => r.session_id);
+          setCompletedSessionIds(completedIds);
 
-        if (todaySessionData && !todaySessionData.error) {
-          setActiveSession(todaySessionData);
-        } else {
-          // Elegir primera sesión NO completada en orden de semanas/sesiones
-            const nextSession = allSessionsData
-              .flatMap(w => (w.sessions || []))
-              .find(s => !completedIds.includes(s.id));
-            if (nextSession) {
-              const sData = await getSessionById(nextSession.id);
-              setActiveSession(sData);
-            } else if (todaySessionData?.error) {
-              console.error("Error fetching today's session:", todaySessionData.error);
-              setActiveSession({ error: "Could not load session." });
-            } else if (allSessionsData.length > 0) {
-              // Todo completado
-              setActiveSession({ completedProgram: true });
+          // Procesar sesión activa
+          if (allSessionsResult.status === 'fulfilled') {
+            const allSessionsData = allSessionsResult.value || [];
+            setAllProgramSessions(allSessionsData);
+
+            if (todaySessionResult.status === 'fulfilled' && 
+                todaySessionResult.value && 
+                !todaySessionResult.value.error) {
+              setActiveSession(todaySessionResult.value);
             } else {
-              setActiveSession({ noSessions: true });
+              // Buscar siguiente sesión no completada
+              const nextSession = allSessionsData
+                .flatMap(w => w.sessions || [])
+                .find(s => !completedIds.includes(s.id));
+
+              if (nextSession) {
+                const sData = await getSessionById(nextSession.id);
+                setActiveSession(sData);
+              } else if (allSessionsData.length > 0) {
+                setActiveSession({ completedProgram: true });
+              } else {
+                setActiveSession({ noSessions: true });
+              }
             }
+          }
         }
+
+        // Actualizar badges y PRs (no críticos)
+        if (badgesResult.status === 'fulfilled') {
+          setBadges((badgesResult.value || []).slice(0, 4));
+        }
+        if (prsResult.status === 'fulfilled') {
+          setPRs((prsResult.value || []).slice(0, 5));
+        }
+
+        // Fase 3: Cargar estudiantes (puede ir en paralelo después)
+        // Se cargará por el useEffect de students
       }
     } catch (error) {
-      console.error("Dashboard loading error:", error);
+      if (import.meta.env.DEV) {
+        console.error('Dashboard loading error:', error);
+      }
       setErrorState(true);
       toast({
         title: "Error al cargar datos",
@@ -167,31 +225,59 @@ const Dashboard = () => {
       });
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
-  }, [toast, session, fetchStudents]);
+  }, [session, toast]);
 
-  // useEffect optimizado con debounce para fetch de estudiantes
+  /**
+   * OPTIMIZACIÓN 3: useEffect unificado para carga inicial
+   * - Solo se ejecuta una vez cuando auth está listo
+   * - Usa hasLoadedRef para prevenir doble ejecución en StrictMode
+   */
   useEffect(() => {
-    if (!profile && !enrollment) return;
-    
-    // Invalidar caché cuando cambia el enrollment para forzar refresh
-    setStudentsCache(null);
-    setLastFetchTime(0);
-    
-    const timeoutId = setTimeout(() => {
-      fetchStudents(true); // Forzar refresh cuando cambia enrollment
-    }, 100); // Pequeño debounce para evitar llamadas múltiples
-    
-    return () => clearTimeout(timeoutId);
-  }, [enrollment?.id, enrollment?.program_id, profile?.role]);
+    if (authLoading) return;
+    if (hasLoadedRef.current) return;
 
-  useEffect(() => {
-    if (!authLoading) {
-      loadDashboardData();
-    }
+    hasLoadedRef.current = true;
+    loadDashboardData();
+
+    // Cleanup al desmontar
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      // Reset en desarrollo para HMR
+      if (import.meta.env.DEV) {
+        hasLoadedRef.current = false;
+      }
+    };
   }, [authLoading, loadDashboardData]);
 
-  const handleSessionSelect = async (sessionId) => {
+  /**
+   * OPTIMIZACIÓN 4: Carga de estudiantes separada con debounce
+   * - Solo se ejecuta cuando cambia enrollment o profile
+   * - Tiene delay para evitar múltiples llamadas
+   */
+  useEffect(() => {
+    if (!profile || !enrollment) return;
+
+    // Invalidar caché si cambió el enrollment
+    if (studentsCacheRef.current.enrollmentId !== enrollment.id) {
+      studentsCacheRef.current = { data: null, timestamp: 0, enrollmentId: null };
+    }
+
+    // Debounce para evitar múltiples llamadas
+    const timeoutId = setTimeout(() => {
+      fetchStudents(false);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [enrollment?.id, profile?.role, fetchStudents]);
+
+  /**
+   * Handlers optimizados
+   */
+  const handleSessionSelect = useCallback(async (sessionId) => {
     if (!sessionId) return;
     try {
       const sessionData = await getSessionById(sessionId);
@@ -204,30 +290,45 @@ const Dashboard = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
-  const handleCompleteSession = () => {
-    if (activeSession && activeSession.exercises) {
+  const handleCompleteSession = useCallback(() => {
+    if (activeSession?.exercises) {
       setShowCompleteModal(true);
     }
-  };
+  }, [activeSession]);
 
-  // Memoizar el programa name (DEBE estar antes de cualquier return)
+  const handleModalComplete = useCallback(() => {
+    setShowCompleteModal(false);
+    // Invalidar caché y recargar
+    hasLoadedRef.current = false;
+    studentsCacheRef.current = { data: null, timestamp: 0, enrollmentId: null };
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const handleRefreshStudents = useCallback(() => {
+    fetchStudents(true);
+  }, [fetchStudents]);
+
+  /**
+   * Valores memoizados
+   */
   const programName = useMemo(() => {
     if (profile?.role === 'admin') return 'Todos los programas';
     return enrollment?.program?.name || enrollment?.program_name || 'Mi Programa';
   }, [profile?.role, enrollment?.program?.name, enrollment?.program_name]);
 
-  const containerVariants = {
+  const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+      transition: { staggerChildren: 0.1 }
     }
-  };
+  }), []);
 
+  /**
+   * Renders condicionales
+   */
   if (loading || authLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -246,7 +347,10 @@ const Dashboard = () => {
         <div>
           <h2 className="mb-4 text-2xl font-bold text-destructive">¡Ups! Algo salió mal.</h2>
           <p className="mb-6 text-muted-foreground">No pudimos cargar los datos de tu dashboard.</p>
-          <Button onClick={loadDashboardData}>
+          <Button onClick={() => {
+            hasLoadedRef.current = false;
+            loadDashboardData();
+          }}>
             Reintentar
           </Button>
         </div>
@@ -265,7 +369,9 @@ const Dashboard = () => {
           <div className="flex items-center justify-center w-32 h-32 mx-auto rounded-full shadow-lg bg-gradient-to-br from-primary to-secondary shadow-primary/30">
             <Target className="w-16 h-16 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">¡Comienza tu Transformación!</h2>
+          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+            ¡Comienza tu Transformación!
+          </h2>
           <p className="max-w-md text-muted-foreground">
             Selecciona un programa de entrenamiento y comienza tu viaje hacia una versión más fuerte de ti mismo.
           </p>
@@ -292,18 +398,22 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           {enrollment && <CurrentBlock enrollment={enrollment} />}
-          {enrollment && <TodaySession 
-            activeSession={activeSession}
-            allSessions={allProgramSessions}
-            completedSessionIds={completedSessionIds}
-            onSessionSelect={handleSessionSelect}
-            onCompleteSession={handleCompleteSession} 
-          />}
+          {enrollment && (
+            <TodaySession 
+              activeSession={activeSession}
+              allSessions={allProgramSessions}
+              completedSessionIds={completedSessionIds}
+              onSessionSelect={handleSessionSelect}
+              onCompleteSession={handleCompleteSession} 
+            />
+          )}
           {enrollment && <ProgressHistory prs={prs} />}
           {profile?.role === 'admin' && !enrollment && (
             <div className="p-6 text-center border bg-card border-border rounded-xl">
               <h3 className="text-xl font-semibold">Modo Administrador</h3>
-              <p className="mt-2 text-muted-foreground">No estás inscrito en ningún programa. Puedes ver la actividad de los alumnos a la derecha.</p>
+              <p className="mt-2 text-muted-foreground">
+                No estás inscrito en ningún programa. Puedes ver la actividad de los alumnos a la derecha.
+              </p>
             </div>
           )}
         </div>
@@ -311,22 +421,22 @@ const Dashboard = () => {
         <div className="space-y-4 sm:space-y-6">
           {profile?.role === 'admin' && (
             <EnrolledStudents 
-              students={students || []} 
-              studentsCount={students?.length || 0}
+              students={students} 
+              studentsCount={students.length}
               isAdmin 
               programName={programName}
-              onRefresh={() => fetchStudents(true)}
+              onRefresh={handleRefreshStudents}
             />
           )}
           {profile?.role !== 'admin' && (
             <>
               {enrollment && (
                 <EnrolledStudents 
-                  students={students || []} 
-                  studentsCount={students?.length || 0}
+                  students={students} 
+                  studentsCount={students.length}
                   programName={programName}
                   isAdmin={false}
-                  onRefresh={() => fetchStudents(true)}
+                  onRefresh={handleRefreshStudents}
                 />
               )}
               <QuickActions />
@@ -342,10 +452,7 @@ const Dashboard = () => {
           session={activeSession}
           enrollment={enrollment}
           onClose={() => setShowCompleteModal(false)}
-          onComplete={() => {
-            setShowCompleteModal(false);
-            loadDashboardData();
-          }}
+          onComplete={handleModalComplete}
         />
       )}
     </motion.div>

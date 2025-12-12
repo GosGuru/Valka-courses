@@ -81,6 +81,14 @@ export const AuthProvider = ({ children }) => {
         title: "Sign out Failed",
         description: error.message || "Something went wrong",
       });
+    } else {
+      // Limpiar localStorage al cerrar sesión exitosamente
+      try {
+        localStorage.clear();
+        console.log('[Auth] localStorage limpiado después del cierre de sesión');
+      } catch (e) {
+        console.error('[Auth] Error al limpiar localStorage:', e);
+      }
     }
 
     return { error };

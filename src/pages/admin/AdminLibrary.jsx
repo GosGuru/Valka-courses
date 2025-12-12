@@ -163,22 +163,22 @@ const AdminLibrary = () => {
       <div className="space-y-4">
         {loading ? <p>Cargando...</p> : categories.map(category => (
           <Collapsible.Root key={category.id} defaultOpen className="border bg-card border-border rounded-xl">
-            <Collapsible.Trigger className="flex items-center justify-between w-full p-4 transition-colors hover:bg-accent">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between w-full p-4">
+              <Collapsible.Trigger className="flex items-center gap-4 flex-1 hover:opacity-80 transition-opacity">
                 <h2 className="text-xl font-bold">{category.name}</h2>
                 <span className="text-sm text-muted-foreground">({category.lessons.length} lecciones)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openNewLessonForm(category.id); }}><Plus className="w-4 h-4 mr-1" /> Lección</Button>
+              </Collapsible.Trigger>
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <Button variant="outline" size="sm" onClick={() => openNewLessonForm(category.id)}><Plus className="w-4 h-4 mr-1" /> Lección</Button>
                 <AlertDialog>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}><MoreHorizontal className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditCategory(category); }}>Editar Categoría</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditCategory(category)}>Editar Categoría</DropdownMenuItem>
                       <AlertDialogTrigger asChild>
-                        <DropdownMenuItem className="text-red-500" onClick={(e) => e.stopPropagation()}>Eliminar Categoría</DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-500">Eliminar Categoría</DropdownMenuItem>
                       </AlertDialogTrigger>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -188,7 +188,7 @@ const AdminLibrary = () => {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
-            </Collapsible.Trigger>
+            </div>
             <Collapsible.Content>
               <div className="p-4 space-y-2 border-t border-border">
                 {category.lessons.length > 0 ? category.lessons.map(lesson => (

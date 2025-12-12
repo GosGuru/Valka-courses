@@ -43,10 +43,22 @@ export async function postToN8n(
       return null;
     }
 
-    // N8N puede opcionalmente devolver acciones del coach
-    const data = await response.json();
-    console.log('[N8N] Respuesta recibida:', data);
-    return data as N8nOptionalReply;
+    // Verificar contenido antes de parsear JSON
+    const responseText = await response.text();
+    
+    if (!responseText || responseText.trim() === '') {
+      console.warn('[N8N] Respuesta vacía del servidor');
+      return null;
+    }
+
+    try {
+      const data = JSON.parse(responseText);
+      console.log('[N8N] Respuesta recibida:', data);
+      return data as N8nOptionalReply;
+    } catch (parseError) {
+      console.error('[N8N] Error parsing JSON:', responseText.substring(0, 200));
+      return null;
+    }
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === 'AbortError') {

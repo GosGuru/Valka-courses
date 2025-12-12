@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, AlertCircle, Maximize } from 'lucide-react';
 import { useChat, type Message } from './hooks/useChat';
 import { useAutoScroll } from './hooks/useAutoScroll';
+import { useBeforeUnload } from './hooks/useBeforeUnload';
 import MessageBubble from './MessageBubble';
 import StarterChips from './StarterChips';
 import ScrollToBottomButton from './ScrollToBottomButton';
 import TypingIndicator from './TypingIndicator';
 import MessageInput from './MessageInput';
+import AnimatedTrashIcon from './AnimatedTrashIcon';
+import DeleteChatModal from './DeleteChatModal';
+import UnsavedChangesModal from './UnsavedChangesModal';
 import './valka-chat-premium.css';
 
 export type { Message };
@@ -42,7 +46,9 @@ export default function ValkaChatExperience({
     error,
     sendMessage,
     clearError,
-    retryLastMessage
+    retryLastMessage,
+    clearMessages,
+    hasUnsavedChanges
   } = useChat({ userContext });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -60,6 +66,22 @@ export default function ValkaChatExperience({
   });
 
   const [showStarterChips, setShowStarterChips] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [isTrashActive, setIsTrashActive] = useState(false);
+
+  // Determinar si el usuario está logueado
+  const isLoggedIn = userContext?.id !== undefined && !userContext?.not_logged;
+
+  // Protección contra pérdida de datos (solo para usuarios no logueados con mensajes)
+  const shouldProtect = !isLoggedIn && messages.length > 0;
+  
+  const beforeUnload = useBeforeUnload({
+    enabled: shouldProtect,
+    onBeforeUnload: () => {
+      console.log('[Chat] Attempting to leave with unsaved messages');
+    }
+  });
 
   // Enfocar input al cargar
   useEffect(() => {
@@ -95,6 +117,33 @@ export default function ValkaChatExperience({
     }, 200);
   };
 
+  const handleOpenDeleteModal = () => {
+    if (messages.length === 0) return;
+    setIsTrashActive(true);
+    setShowDeleteModal(true);
+    
+    // Resetear el estado activo después de la animación
+    setTimeout(() => setIsTrashActive(false), 500);
+  };
+
+  const handleConfirmDelete = () => {
+    clearMessages();
+    setShowStarterChips(true);
+  };
+
+  const handleConfirmLeave = () => {
+    // El usuario confirmó que quiere salir sin guardar
+    // Deshabilitamos la protección temporalmente para permitir la navegación
+    clearMessages();
+    setShowUnsavedModal(false);
+    
+    // Si hay navegación pendiente, ejecutarla
+    if (beforeUnload.pendingNavigation.current) {
+      beforeUnload.pendingNavigation.current();
+      beforeUnload.pendingNavigation.current = null;
+    }
+  };
+
   return (
     <div 
       className={`valka-chat-container ${className}`}
@@ -114,19 +163,52 @@ export default function ValkaChatExperience({
                 Estoy aquí para guiarte en tu entrenamiento
               </p>
             </div>
-            {/* Botón Fullscreen estilo YouTube */}
-            {showFullscreenButton && (
+            
+            {/* Botones de acción */}
+            <div className="valka-header-actions">
+              {/* Botón Limpiar Chat */}
               <button
-                onClick={() => navigate('/chat/fullscreen')}
-                className="valka-fullscreen-button"
-                title="Pantalla completa"
-                aria-label="Activar modo pantalla completa"
+                onClick={handleOpenDeleteModal}
+                className="valka-action-button"
+                title="Limpiar conversación"
+                aria-label="Limpiar conversación"
+                disabled={messages.length === 0}
               >
-                <Maximize className="w-5 h-5" />
+                <AnimatedTrashIcon isActive={isTrashActive} />
               </button>
-            )}
+
+              {/* Botón Fullscreen */}
+              {showFullscreenButton && (
+                <button
+                  onClick={() => navigate('/chat/fullscreen')}
+                  className="valka-action-button"
+                  title="Pantalla completa"
+                  aria-label="Activar modo pantalla completa"
+                >
+                  <Maximize className="lucide-maximize" strokeWidth={1.5} size={18} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteChatModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        messageCount={messages.length}
+      />
+
+      {/* Modal de cambios sin guardar (solo para usuarios no logueados) */}
+      {!isLoggedIn && (
+        <UnsavedChangesModal
+          isOpen={showUnsavedModal}
+          onClose={() => setShowUnsavedModal(false)}
+          onConfirmLeave={handleConfirmLeave}
+          messageCount={messages.length}
+        />
       )}
 
       {/* Área de mensajes */}
@@ -151,8 +233,10 @@ export default function ValkaChatExperience({
           />
         ))}
 
-        {/* Indicador de escritura */}
-        {isLoading && <TypingIndicator />}
+        {/* Indicador de escritura - solo si NO hay mensaje del asistente en progreso */}
+        {isLoading && !messages.some(m => m.role === 'assistant' && m.status === 'sending') && (
+          <TypingIndicator />
+        )}
 
         {/* Anchor para scroll */}
         <div ref={messagesEndRef} />

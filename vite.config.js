@@ -1,6 +1,7 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { createLogger, defineConfig } from 'vite';
+import suppressVercelAnalytics from './plugins/suppress-vercel.js';
 
 const isDev = process.env.NODE_ENV !== 'production';
 let inlineEditPlugin, editModeDevPlugin;
@@ -194,6 +195,7 @@ export default defineConfig({
 	plugins: [
 		...(isDev ? [inlineEditPlugin(), editModeDevPlugin()] : []),
 		react(),
+		suppressVercelAnalytics(),
 		addTransformIndexHtml
 	],
 	server: {
@@ -201,6 +203,54 @@ export default defineConfig({
 		// Removido COEP credentialless porque puede bloquear iframes (YouTube, Vimeo) en desarrollo.
 		headers: {},
 		allowedHosts: true,
+		proxy: {
+			'/api/n8n': {
+				target: 'https://n8n-n8n.ua4qkv.easypanel.host',
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api\/n8n/, ''),
+				secure: true,
+				// Configuración para streaming
+				ws: true, // Soporte para WebSocket
+				configure: (proxy, _options) => {
+					proxy.on('error', (err, _req, _res) => {
+						console.log('[Vite Proxy] Error:', err);
+					});
+					proxy.on('proxyReq', (proxyReq, req, _res) => {
+						console.log('[Vite Proxy] 📤 Sending Request:', req.method, req.url);
+						console.log('[Vite Proxy] 📋 Headers:', JSON.stringify(req.headers, null, 2));
+						
+						// Log del body si es POST/PUT
+						if (req.method === 'POST' || req.method === 'PUT') {
+							let body = '';
+							req.on('data', (chunk) => {
+								body += chunk.toString();
+							});
+							req.on('end', () => {
+								console.log('[Vite Proxy] 📦 Body enviado a N8N:');
+								console.log(body);
+								try {
+									const parsed = JSON.parse(body);
+									console.log('[Vite Proxy] 📦 Body parseado:', JSON.stringify(parsed, null, 2));
+								} catch (e) {
+									console.log('[Vite Proxy] No se pudo parsear como JSON');
+								}
+							});
+						}
+						
+						// Headers necesarios para streaming
+						proxyReq.setHeader('Accept', 'text/event-stream');
+					});
+					proxy.on('proxyRes', (proxyRes, req, _res) => {
+						console.log('[Vite Proxy] Received Response:', proxyRes.statusCode, req.url);
+						// Log si es streaming
+						const contentType = proxyRes.headers['content-type'];
+						if (contentType && (contentType.includes('text/event-stream') || contentType.includes('text/plain'))) {
+							console.log('[Vite Proxy] Streaming enabled');
+						}
+					});
+				},
+			},
+		},
 	},
 	resolve: {
 		extensions: ['.jsx', '.js', '.tsx', '.ts', '.json', ],

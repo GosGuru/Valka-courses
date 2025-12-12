@@ -126,7 +126,94 @@
   line-height: 1.4;
 }
 
-/* === Botón Fullscreen (estilo YouTube) === */
+/* === Contenedor de Botones de Acción === */
+.valka-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* === Botones de Acción (Limpiar, Fullscreen) === */
+.valka-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--valka-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.valka-action-button:hover {
+  background: rgba(120, 120, 128, 0.16);
+  color: var(--valka-text-primary);
+}
+
+.valka-action-button:active {
+  transform: scale(0.95);
+  background: rgba(120, 120, 128, 0.24);
+}
+
+/* Botón deshabilitado */
+.valka-action-button:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.valka-action-button:disabled:hover {
+  background: transparent;
+  transform: none;
+}
+
+/* Efecto especial para el botón de basura con el icono animado */
+.valka-action-button:has(.animated-trash-icon):hover:not(:disabled) {
+  background: rgba(255, 59, 48, 0.08);
+  color: #ff3b30;
+}
+
+.valka-action-button:has(.animated-trash-icon):active:not(:disabled) {
+  background: rgba(255, 59, 48, 0.15);
+}
+
+/* Efecto de "shake" sutil al hacer hover en la basura */
+@keyframes buttonShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1px); }
+  75% { transform: translateX(1px); }
+}
+
+.valka-action-button:has(.animated-trash-icon):hover:not(:disabled) {
+  animation: buttonShake 0.3s ease 0.1s;
+}
+
+/* Estilos para el icono Maximize */
+.valka-action-button .lucide-maximize {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+/* Mobile - Botones más grandes para mejor toque */
+@media (max-width: 640px) {
+  .valka-action-button {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .valka-header-actions {
+    gap: 6px;
+  }
+}
+
+/* === LEGACY: Mantener por compatibilidad === */
 .valka-fullscreen-button {
   display: flex;
   align-items: center;
@@ -154,13 +241,11 @@
   background: var(--valka-bg-user);
 }
 
-/* Animación sutil del icono al hover */
 .valka-fullscreen-button:hover svg {
   transform: scale(1.1);
   transition: transform var(--valka-transition-fast);
 }
 
-/* Mobile - Botón más grande para mejor toque */
 @media (max-width: 640px) {
   .valka-fullscreen-button {
     width: 44px;
@@ -415,6 +500,22 @@
   line-height: 1.6;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  display: inline;
+}
+
+/* Cursor parpadeante para streaming */
+.valka-streaming-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--valka-gold);
+  animation: blink 1s step-end infinite;
+  font-weight: 400;
+  vertical-align: baseline;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 .valka-message-paragraph {
@@ -433,6 +534,26 @@
 .valka-message-list li {
   margin: 4px 0;
   line-height: 1.5;
+}
+
+/* Markdown formatting */
+.valka-message-text strong {
+  font-weight: 600;
+  color: var(--valka-gold);
+}
+
+.valka-message-text em {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.valka-message-text code {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  color: var(--valka-gold-light);
 }
 
 /* Estado de envío */

@@ -53,7 +53,7 @@ export const MAX_TOKENS = 1024;
 export const TEMPERATURE = 0.7;
 
 // N8N Webhook (URL correcta)
-export const N8N_WEBHOOK_URL = 'https://n8n-n8n.ua4qkv.easypanel.host/webhook/messageWEB';
+export const N8N_WEBHOOK_URL = 'https://n8n-n8n.ua4qkv.easypanel.host/webhook/52b1d840-393f-4760-959d-f41b6ce605cc';
 
 // Límites y timeouts
 export const N8N_TIMEOUT_MS = 30000; // 30 segundos para AI Agent

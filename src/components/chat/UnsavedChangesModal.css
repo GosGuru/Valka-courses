@@ -1,0 +1,302 @@
+/* ============================================
+   UNSAVED CHANGES MODAL - Estilo Apple
+   ============================================ */
+
+/* Backdrop con blur */
+.unsaved-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px) brightness(1);
+  -webkit-backdrop-filter: blur(0px) brightness(1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+}
+
+.unsaved-modal-backdrop.active {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px) brightness(0.7);
+  -webkit-backdrop-filter: blur(20px) brightness(0.7);
+  opacity: 1;
+}
+
+/* Contenedor del modal */
+.unsaved-modal-container {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-radius: 20px;
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 80px -20px rgba(0, 0, 0, 0.15);
+  transform: scale(0.9) translateY(20px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.unsaved-modal-container.active {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .unsaved-modal-container {
+    background: rgba(28, 28, 30, 0.95);
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 25px 50px -12px rgba(0, 0, 0, 0.5),
+      0 0 80px -20px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Contenido del modal */
+.unsaved-modal-content {
+  padding: 32px;
+  text-align: center;
+}
+
+/* Icono de advertencia - Naranja para "unsaved" */
+.unsaved-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #ff9500 0%, #ffb340 100%);
+  border-radius: 50%;
+  color: white;
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 20px rgba(255, 149, 0, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(255, 149, 0, 0.5);
+  }
+}
+
+/* Título */
+.unsaved-modal-title {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #1d1d1f;
+  letter-spacing: -0.022em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .unsaved-modal-title {
+    color: #f5f5f7;
+  }
+}
+
+/* Descripción */
+.unsaved-modal-description {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #6e6e73;
+  font-weight: 400;
+}
+
+@media (prefers-color-scheme: dark) {
+  .unsaved-modal-description {
+    color: #a1a1a6;
+  }
+}
+
+/* Sugerencia */
+.unsaved-modal-suggestion {
+  margin: 0 0 24px 0;
+  padding: 12px 16px;
+  background: rgba(0, 122, 255, 0.08);
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #007aff;
+  text-align: left;
+}
+
+.unsaved-modal-suggestion strong {
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .unsaved-modal-suggestion {
+    background: rgba(10, 132, 255, 0.12);
+    color: #0a84ff;
+  }
+}
+
+/* Botones - Stack vertical */
+.unsaved-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.unsaved-modal-button {
+  width: 100%;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.022em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Botón Iniciar Sesión (Principal - Azul) */
+.unsaved-modal-button-signin {
+  background: linear-gradient(180deg, #007aff 0%, #0051d5 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+  order: 1;
+}
+
+.unsaved-modal-button-signin:hover {
+  background: linear-gradient(180deg, #0b85ff 0%, #0059e6 100%);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.unsaved-modal-button-signin:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-color-scheme: dark) {
+  .unsaved-modal-button-signin {
+    background: linear-gradient(180deg, #0a84ff 0%, #0066cc 100%);
+  }
+}
+
+/* Botón Salir (Destructivo - Gris) */
+.unsaved-modal-button-leave {
+  background: rgba(120, 120, 128, 0.16);
+  color: #86868b;
+  order: 2;
+}
+
+.unsaved-modal-button-leave:hover {
+  background: rgba(120, 120, 128, 0.24);
+  color: #6e6e73;
+  transform: translateY(-1px);
+}
+
+.unsaved-modal-button-leave:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-color-scheme: dark) {
+  .unsaved-modal-button-leave {
+    background: rgba(120, 120, 128, 0.24);
+    color: #98989d;
+  }
+  
+  .unsaved-modal-button-leave:hover {
+    background: rgba(120, 120, 128, 0.32);
+  }
+}
+
+/* Botón Cancelar (Secundario) */
+.unsaved-modal-button-cancel {
+  background: transparent;
+  color: #007aff;
+  order: 3;
+  font-weight: 500;
+}
+
+.unsaved-modal-button-cancel:hover {
+  background: rgba(0, 122, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.unsaved-modal-button-cancel:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-color-scheme: dark) {
+  .unsaved-modal-button-cancel {
+    color: #0a84ff;
+  }
+  
+  .unsaved-modal-button-cancel:hover {
+    background: rgba(10, 132, 255, 0.12);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .unsaved-modal-content {
+    padding: 24px;
+  }
+
+  .unsaved-modal-title {
+    font-size: 20px;
+  }
+
+  .unsaved-modal-description {
+    font-size: 14px;
+  }
+}
+
+/* Animación de entrada para el contenido */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.unsaved-modal-container.active .unsaved-modal-icon,
+.unsaved-modal-container.active .unsaved-modal-title,
+.unsaved-modal-container.active .unsaved-modal-description,
+.unsaved-modal-container.active .unsaved-modal-suggestion,
+.unsaved-modal-container.active .unsaved-modal-actions {
+  animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation-fill-mode: backwards;
+}
+
+.unsaved-modal-container.active .unsaved-modal-icon {
+  animation-delay: 0.05s;
+}
+
+.unsaved-modal-container.active .unsaved-modal-title {
+  animation-delay: 0.1s;
+}
+
+.unsaved-modal-container.active .unsaved-modal-description {
+  animation-delay: 0.15s;
+}
+
+.unsaved-modal-container.active .unsaved-modal-suggestion {
+  animation-delay: 0.2s;
+}
+
+.unsaved-modal-container.active .unsaved-modal-actions {
+  animation-delay: 0.25s;
+}
